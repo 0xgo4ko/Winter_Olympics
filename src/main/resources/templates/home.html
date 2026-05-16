@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Winter Olympics</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+<main class="page-shell">
+    <section class="hero">
+        <div class="hero__content">
+            <p class="hero__eyebrow">CSCB869 Java Web Services</p>
+            <h1>Winter Olympics</h1>
+            <p class="hero__lead">
+                A web application for managing winter sports, athletes, countries, events, and results.
+            </p>
+            <div class="hero__actions">
+                <a class="button button--primary" th:href="@{/home}">Home</a>
+                <a class="button button--secondary" href="#overview">Overview</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="overview" class="overview" aria-label="Application overview">
+        <article class="overview-card">
+            <h2>Sports</h2>
+            <p>Prepare categories and disciplines for winter Olympic competitions.</p>
+        </article>
+        <article class="overview-card">
+            <h2>Athletes</h2>
+            <p>Build athlete profiles with country, sport, and competition details.</p>
+        </article>
+        <article class="overview-card">
+            <h2>Results</h2>
+            <p>Track event standings, medals, and final rankings as the project grows.</p>
+        </article>
+    </section>
+</main>
+</body>
+</html>
