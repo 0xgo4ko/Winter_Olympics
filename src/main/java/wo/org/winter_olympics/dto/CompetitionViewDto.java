@@ -17,6 +17,7 @@ public class CompetitionViewDto {
     private CompetitionStatus status;
     private Integer secondRunQualifierCount;
     private Integer penaltySecondsPerMiss;
+    private boolean joinedByCurrentUser;
 
     public Long getId() {
         return id;
@@ -88,5 +89,13 @@ public class CompetitionViewDto {
 
     public void setPenaltySecondsPerMiss(Integer penaltySecondsPerMiss) {
         this.penaltySecondsPerMiss = penaltySecondsPerMiss;
+    }
+
+    public boolean isJoinedByCurrentUser() {
+        return joinedByCurrentUser;
+    }
+
+    public void setJoinedByCurrentUser(boolean joinedByCurrentUser) {
+        this.joinedByCurrentUser = joinedByCurrentUser;
     }
 }

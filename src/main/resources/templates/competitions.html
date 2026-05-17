@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,13 @@
             <div>
                 <h1>Competitions</h1>
                 <p>Browse available competitions and follow their setup details.</p>
+            </div>
+        </div>
+
+        <div class="notice-modal" th:if="${competitionNotice}">
+            <div class="notice-modal__panel">
+                <p th:text="${competitionNotice}">Competition notice.</p>
+                <a class="button button--primary" th:href="@{/competitions}">OK</a>
             </div>
         </div>
 
@@ -54,7 +62,25 @@
                     </td>
                     <td class="table-actions">
                         <span class="action-disabled">Details</span>
-                        <span class="action-disabled action-disabled--join">Join</span>
+                        <a class="table-action table-action--edit"
+                           sec:authorize="isAnonymous()"
+                           th:href="@{/login}">Login</a>
+                        <form class="table-action-form"
+                              sec:authorize="hasRole('ATHLETE')"
+                              th:if="${!competition.joinedByCurrentUser}"
+                              th:action="@{/competitions/{id}/join(id=${competition.id})}"
+                              method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="table-action table-action--join" type="submit">Join</button>
+                        </form>
+                        <form class="table-action-form"
+                              sec:authorize="hasRole('ATHLETE')"
+                              th:if="${competition.joinedByCurrentUser}"
+                              th:action="@{/competitions/{id}/leave(id=${competition.id})}"
+                              method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="table-action table-action--delete" type="submit">Leave</button>
+                        </form>
                     </td>
                 </tr>
                 </tbody>

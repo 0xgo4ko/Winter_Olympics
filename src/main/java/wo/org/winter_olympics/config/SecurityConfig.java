@@ -2,6 +2,7 @@ package wo.org.winter_olympics.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +17,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/home", "/css/**", "/images/**", "/js/**").permitAll()
                         .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/competitions/*/join", "/competitions/*/leave").hasRole("ATHLETE")
                         .requestMatchers("/competitions/**", "/rankings/**", "/medals/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/athlete/**").hasRole("ATHLETE")

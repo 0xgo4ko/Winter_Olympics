@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 import wo.org.winter_olympics.exception.PasswordMismatchException;
@@ -38,6 +39,15 @@ public class GlobalExceptionHandler {
         }
 
         return "redirect:/admin/competitions/create";
+    }
+
+    @ExceptionHandler(CompetitionJoinException.class)
+    public String handleCompetitionJoinException(
+            CompetitionJoinException exception,
+            RedirectAttributes redirectAttributes
+    ) {
+        redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
+        return "redirect:/competitions";
     }
 
     @ExceptionHandler({
