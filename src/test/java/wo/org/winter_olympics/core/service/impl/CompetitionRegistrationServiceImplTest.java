@@ -13,9 +13,12 @@ import wo.org.winter_olympics.data.entity.enums.CompetitionStatus;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
+import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
+import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -141,6 +144,43 @@ class CompetitionRegistrationServiceImplTest {
 
         assertEquals("You can only leave a competition before it starts.", exception.getMessage());
         verify(competitionRegistrationRepository, never()).delete(any());
+    }
+
+    @Test
+    void getParticipantsForCompetitionReturnsParticipants() {
+        AppUserEntity user = createUser();
+        user.setFullName("Ivan Petrov");
+        user.setCountry("Bulgaria");
+        user.setGender(wo.org.winter_olympics.data.entity.enums.Gender.MALE);
+
+        CompetitionEntity competition = createCompetition(CompetitionStatus.OPEN);
+        CompetitionRegistrationEntity registration = new CompetitionRegistrationEntity();
+        registration.setCompetition(competition);
+        registration.setUser(user);
+
+        when(competitionRepository.existsById(1L)).thenReturn(true);
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
+
+        List<CompetitionParticipantViewDto> participants =
+                competitionRegistrationService.getParticipantsForCompetition(1L);
+
+        assertEquals(1, participants.size());
+        assertEquals("athlete1", participants.getFirst().getUsername());
+        assertEquals("Ivan Petrov", participants.getFirst().getFullName());
+        assertEquals("Bulgaria", participants.getFirst().getCountry());
+        assertEquals("Pending", participants.getFirst().getResultStatus());
+    }
+
+    @Test
+    void getParticipantsForCompetitionThrowsWhenCompetitionDoesNotExist() {
+        when(competitionRepository.existsById(99L)).thenReturn(false);
+
+        CompetitionNotFoundException exception = assertThrows(
+                CompetitionNotFoundException.class,
+                () -> competitionRegistrationService.getParticipantsForCompetition(99L)
+        );
+
+        assertEquals("Competition was not found: 99", exception.getMessage());
     }
 
     private AppUserEntity createUser() {

@@ -61,7 +61,8 @@
                         </span>
                     </td>
                     <td class="table-actions">
-                        <span class="action-disabled">Details</span>
+                        <a class="table-action table-action--edit"
+                           th:href="@{/competitions/{id}(id=${competition.id})}">Details</a>
                         <a class="table-action table-action--edit"
                            sec:authorize="isAnonymous()"
                            th:href="@{/login}">Login</a>

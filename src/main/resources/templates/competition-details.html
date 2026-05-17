@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${competition.name + ' | Winter Olympics'}">Competition Details | Winter Olympics</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="auth-shell auth-shell--top">
+    <section class="auth-panel auth-panel--table">
+        <a class="auth-panel__back" th:href="@{/competitions}">Back to competitions</a>
+
+        <div class="page-header">
+            <div>
+                <h1 th:text="${competition.name}">Men Ski Slalom</h1>
+                <p>Competition details and currently registered athletes.</p>
+            </div>
+            <a class="button button--secondary-dark"
+               sec:authorize="hasRole('ADMIN')"
+               th:href="@{/admin/competitions}">Admin Panel</a>
+        </div>
+
+        <section class="details-grid" aria-label="Competition information">
+            <div class="details-item">
+                <span>Type</span>
+                <strong th:text="${competition.type}">SKI_SLALOM</strong>
+            </div>
+            <div class="details-item">
+                <span>Gender</span>
+                <strong th:text="${competition.gender}">MALE</strong>
+            </div>
+            <div class="details-item">
+                <span>Minimum age</span>
+                <strong th:text="${competition.minimumAge}">18</strong>
+            </div>
+            <div class="details-item">
+                <span>Registration deadline</span>
+                <strong th:text="${competition.registrationDeadline}">2026-06-01</strong>
+            </div>
+            <div class="details-item">
+                <span>Status</span>
+                <strong th:text="${competition.status}">OPEN</strong>
+            </div>
+            <div class="details-item" th:if="${competition.secondRunQualifierCount != null}">
+                <span>Second-run qualifiers</span>
+                <strong th:text="${competition.secondRunQualifierCount}">30</strong>
+            </div>
+            <div class="details-item" th:if="${competition.penaltySecondsPerMiss != null}">
+                <span>Penalty seconds per miss</span>
+                <strong th:text="${competition.penaltySecondsPerMiss}">60</strong>
+            </div>
+        </section>
+
+        <div class="section-heading">
+            <h2>Registered Athletes</h2>
+            <p sec:authorize="hasRole('ADMIN')">Result input controls will be added in the next management step.</p>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Gender</th>
+                    <th>Result</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(participants)}">
+                    <td colspan="5">No athletes have joined this competition yet.</td>
+                </tr>
+                <tr th:each="participant : ${participants}">
+                    <td th:text="${participant.username}">athlete1</td>
+                    <td th:text="${participant.fullName}">Ivan Petrov</td>
+                    <td th:text="${participant.country}">Bulgaria</td>
+                    <td th:text="${participant.gender}">MALE</td>
+                    <td th:text="${participant.resultStatus}">Pending</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

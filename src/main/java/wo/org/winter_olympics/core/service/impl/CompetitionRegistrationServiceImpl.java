@@ -10,11 +10,13 @@ import wo.org.winter_olympics.data.entity.enums.CompetitionStatus;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
+import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 import wo.org.winter_olympics.exception.UserNotFoundException;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -39,6 +41,19 @@ public class CompetitionRegistrationServiceImpl implements CompetitionRegistrati
     public Optional<Long> getJoinedCompetitionId(String username) {
         return competitionRegistrationRepository.findByUserUsername(username)
                 .map(registration -> registration.getCompetition().getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompetitionParticipantViewDto> getParticipantsForCompetition(Long competitionId) {
+        if (!competitionRepository.existsById(competitionId)) {
+            throw new CompetitionNotFoundException(competitionId);
+        }
+
+        return competitionRegistrationRepository.findAllByCompetitionId(competitionId)
+                .stream()
+                .map(this::mapToParticipantViewDto)
+                .toList();
     }
 
     @Override
@@ -104,5 +119,18 @@ public class CompetitionRegistrationServiceImpl implements CompetitionRegistrati
         if (competition.getRegistrationDeadline().isBefore(LocalDate.now())) {
             throw new CompetitionJoinException("Registration for this competition is closed.");
         }
+    }
+
+    private CompetitionParticipantViewDto mapToParticipantViewDto(CompetitionRegistrationEntity registration) {
+        AppUserEntity user = registration.getUser();
+
+        CompetitionParticipantViewDto participantViewDto = new CompetitionParticipantViewDto();
+        participantViewDto.setUsername(user.getUsername());
+        participantViewDto.setFullName(user.getFullName());
+        participantViewDto.setCountry(user.getCountry());
+        participantViewDto.setGender(user.getGender());
+        participantViewDto.setResultStatus("Pending");
+
+        return participantViewDto;
     }
 }

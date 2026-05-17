@@ -43,6 +43,13 @@ public class PublicCompetitionController {
         return "competitions";
     }
 
+    @GetMapping("/competitions/{id}")
+    public String competitionDetails(@PathVariable Long id, Model model) {
+        model.addAttribute("competition", competitionService.getCompetitionById(id));
+        model.addAttribute("participants", competitionRegistrationService.getParticipantsForCompetition(id));
+        return "competition-details";
+    }
+
     @PostMapping("/competitions/{id}/join")
     public String joinCompetition(
             @PathVariable Long id,
