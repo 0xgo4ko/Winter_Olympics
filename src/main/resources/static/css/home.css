@@ -15,6 +15,7 @@ body {
 }
 
 .hero {
+    position: relative;
     display: flex;
     align-items: center;
     min-height: 62vh;
@@ -23,6 +24,18 @@ body {
     background:
             linear-gradient(rgba(12, 31, 56, 0.72), rgba(12, 31, 56, 0.5)),
             url("https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1800&q=80") center/cover;
+}
+
+.hero-nav {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    max-width: calc(100% - 48px);
 }
 
 .hero__content {
@@ -53,12 +66,19 @@ body {
 
 .hero__actions {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 32px;
 }
 
+.logout-form {
+    display: inline-flex;
+    margin: 0;
+}
+
 .button {
+    appearance: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -66,8 +86,10 @@ body {
     padding: 0 18px;
     border: 1px solid transparent;
     border-radius: 6px;
+    font: inherit;
     font-weight: 700;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .button--primary {
@@ -110,7 +132,14 @@ body {
 @media (max-width: 760px) {
     .hero {
         min-height: 56vh;
-        padding: 48px 20px;
+        padding: 96px 20px 48px;
+    }
+
+    .hero-nav {
+        top: 18px;
+        right: 18px;
+        left: 18px;
+        max-width: none;
     }
 
     .overview {

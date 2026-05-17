@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Winter Olympics</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="auth-shell">
+    <section class="auth-panel">
+        <a class="auth-panel__back" th:href="@{/}">Winter Olympics</a>
+        <h1>Profile</h1>
+        <p class="auth-panel__footer">
+            Logged in as <strong sec:authentication="name">athlete</strong>.
+        </p>
+        <p class="auth-panel__footer">Profile editing will be added in the next step.</p>
+    </section>
+</main>
+</body>
+</html>

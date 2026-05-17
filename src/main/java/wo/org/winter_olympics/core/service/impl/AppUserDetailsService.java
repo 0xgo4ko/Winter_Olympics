@@ -11,11 +11,11 @@ import wo.org.winter_olympics.data.entity.AppUserEntity;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 
 @Service
-public class WinterOlympicsUserDetailsService implements UserDetailsService {
+public class AppUserDetailsService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
 
-    public WinterOlympicsUserDetailsService(AppUserRepository appUserRepository) {
+    public AppUserDetailsService(AppUserRepository appUserRepository) {
         this.appUserRepository = appUserRepository;
     }
 
