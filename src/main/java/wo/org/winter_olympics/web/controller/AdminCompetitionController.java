@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.core.service.CompetitionService;
@@ -48,6 +49,52 @@ public class AdminCompetitionController {
 
         competitionService.createCompetition(competitionCreateDto);
         redirectAttributes.addFlashAttribute("competitionSuccess", "Competition created successfully.");
+
+        return "redirect:/admin/competitions";
+    }
+
+    @GetMapping("/admin/competitions/{id}/edit")
+    public String editCompetition(@PathVariable Long id, Model model) {
+        if (!model.containsAttribute("competitionCreateDto")) {
+            model.addAttribute("competitionCreateDto", competitionService.getCompetitionForEdit(id));
+        }
+
+        model.addAttribute("competitionId", id);
+        addCompetitionFormOptions(model);
+
+        return "admin/competition-edit";
+    }
+
+    @PostMapping("/admin/competitions/{id}/edit")
+    public String editCompetition(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("competitionCreateDto") CompetitionCreateDto competitionCreateDto,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("competitionId", id);
+            addCompetitionFormOptions(model);
+            return "admin/competition-edit";
+        }
+
+        competitionService.updateCompetition(id, competitionCreateDto);
+        redirectAttributes.addFlashAttribute("competitionSuccess", "Competition updated successfully.");
+
+        return "redirect:/admin/competitions";
+    }
+
+    @GetMapping("/admin/competitions/{id}/delete")
+    public String deleteCompetitionConfirmation(@PathVariable Long id, Model model) {
+        model.addAttribute("competition", competitionService.getCompetitionById(id));
+        return "admin/competition-delete";
+    }
+
+    @PostMapping("/admin/competitions/{id}/delete")
+    public String deleteCompetition(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        competitionService.deleteCompetition(id);
+        redirectAttributes.addFlashAttribute("competitionSuccess", "Competition deleted successfully.");
 
         return "redirect:/admin/competitions";
     }

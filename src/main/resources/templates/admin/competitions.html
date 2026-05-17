@@ -58,8 +58,10 @@
                     </td>
                     <td class="table-actions">
                         <span class="action-disabled">Details</span>
-                        <span class="action-disabled">Edit</span>
-                        <span class="action-disabled">Delete</span>
+                        <a class="table-action table-action--edit"
+                           th:href="@{/admin/competitions/{id}/edit(id=${competition.id})}">Edit</a>
+                        <a class="table-action table-action--delete"
+                           th:href="@{/admin/competitions/{id}/delete(id=${competition.id})}">Delete</a>
                     </td>
                 </tr>
                 </tbody>

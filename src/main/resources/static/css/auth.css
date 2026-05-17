@@ -253,6 +253,7 @@ body {
     white-space: nowrap;
 }
 
+.table-action,
 .action-disabled {
     display: inline-flex;
     align-items: center;
@@ -264,6 +265,19 @@ body {
     background: #f4f7fb;
     font-size: 0.86rem;
     font-weight: 700;
+    text-decoration: none;
+}
+
+.table-action--edit {
+    color: #234e7e;
+    border-color: #b8c8da;
+    background: #eef5fd;
+}
+
+.table-action--delete {
+    color: #8a1f24;
+    border-color: #edc4c7;
+    background: #fae7e8;
 }
 
 @media (max-width: 640px) {

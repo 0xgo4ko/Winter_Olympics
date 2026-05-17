@@ -14,9 +14,11 @@ import wo.org.winter_olympics.data.repo.CompetitionRepository;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
+import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -116,6 +118,83 @@ class CompetitionServiceImplTest {
         assertEquals(30, competitions.getFirst().getSecondRunQualifierCount());
     }
 
+    @Test
+    void getCompetitionForEditReturnsCreateDto() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+
+        CompetitionCreateDto editDto = competitionService.getCompetitionForEdit(1L);
+
+        assertEquals("Men Ski Slalom", editDto.getName());
+        assertEquals(CompetitionType.SKI_SLALOM, editDto.getType());
+        assertEquals(Gender.MALE, editDto.getGender());
+        assertEquals(18, editDto.getMinimumAge());
+        assertEquals(LocalDate.of(2026, 6, 1), editDto.getRegistrationDeadline());
+        assertEquals(30, editDto.getSecondRunQualifierCount());
+    }
+
+    @Test
+    void updateCompetitionUpdatesEditableFields() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        CompetitionCreateDto updateDto = createBiathlonDto();
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRepository.existsByNameAndIdNot("Women Biathlon", 1L)).thenReturn(false);
+
+        competitionService.updateCompetition(1L, updateDto);
+
+        ArgumentCaptor<CompetitionEntity> competitionCaptor = ArgumentCaptor.forClass(CompetitionEntity.class);
+        verify(competitionRepository).save(competitionCaptor.capture());
+
+        CompetitionEntity savedCompetition = competitionCaptor.getValue();
+        assertEquals("Women Biathlon", savedCompetition.getName());
+        assertEquals(CompetitionType.BIATHLON, savedCompetition.getType());
+        assertEquals(Gender.FEMALE, savedCompetition.getGender());
+        assertEquals(18, savedCompetition.getMinimumAge());
+        assertEquals(LocalDate.of(2026, 6, 1), savedCompetition.getRegistrationDeadline());
+        assertEquals(CompetitionStatus.OPEN, savedCompetition.getStatus());
+        assertEquals(60, savedCompetition.getPenaltySecondsPerMiss());
+        assertNull(savedCompetition.getSecondRunQualifierCount());
+    }
+
+    @Test
+    void updateCompetitionThrowsWhenNameBelongsToAnotherCompetition() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        CompetitionCreateDto updateDto = createBiathlonDto();
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRepository.existsByNameAndIdNot("Women Biathlon", 1L)).thenReturn(true);
+
+        CompetitionNameAlreadyExistsException exception = assertThrows(
+                CompetitionNameAlreadyExistsException.class,
+                () -> competitionService.updateCompetition(1L, updateDto)
+        );
+
+        assertEquals("Competition name is already taken: Women Biathlon", exception.getMessage());
+    }
+
+    @Test
+    void deleteCompetitionDeletesEntity() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+
+        competitionService.deleteCompetition(1L);
+
+        verify(competitionRepository).delete(competition);
+    }
+
+    @Test
+    void deleteCompetitionThrowsWhenCompetitionDoesNotExist() {
+        when(competitionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        CompetitionNotFoundException exception = assertThrows(
+                CompetitionNotFoundException.class,
+                () -> competitionService.deleteCompetition(99L)
+        );
+
+        assertEquals("Competition was not found: 99", exception.getMessage());
+    }
+
     private CompetitionCreateDto createSkiSlalomDto() {
         CompetitionCreateDto createDto = new CompetitionCreateDto();
         createDto.setName("Men Ski Slalom");
@@ -138,5 +217,18 @@ class CompetitionServiceImplTest {
         createDto.setPenaltySecondsPerMiss(60);
 
         return createDto;
+    }
+
+    private CompetitionEntity createSkiSlalomEntity() {
+        CompetitionEntity competition = new CompetitionEntity();
+        competition.setName("Men Ski Slalom");
+        competition.setType(CompetitionType.SKI_SLALOM);
+        competition.setGender(Gender.MALE);
+        competition.setMinimumAge(18);
+        competition.setRegistrationDeadline(LocalDate.of(2026, 6, 1));
+        competition.setStatus(CompetitionStatus.OPEN);
+        competition.setSecondRunQualifierCount(30);
+
+        return competition;
     }
 }

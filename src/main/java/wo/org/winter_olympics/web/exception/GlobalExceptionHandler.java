@@ -1,6 +1,7 @@
 package wo.org.winter_olympics.web.exception;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
+import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 import wo.org.winter_olympics.exception.PasswordMismatchException;
 import wo.org.winter_olympics.exception.RoleNotFoundException;
 import wo.org.winter_olympics.exception.UsernameAlreadyExistsException;
@@ -25,13 +27,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CompetitionNameAlreadyExistsException.class)
     public String handleCompetitionCreateException(
             CompetitionNameAlreadyExistsException exception,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
     ) {
         redirectAttributes.addFlashAttribute("competitionError", exception.getMessage());
+
+        String requestUri = request.getRequestURI();
+        if (requestUri.contains("/edit")) {
+            return "redirect:" + requestUri;
+        }
+
         return "redirect:/admin/competitions/create";
     }
 
-    @ExceptionHandler({RoleNotFoundException.class, ServletException.class, UserNotFoundException.class})
+    @ExceptionHandler({
+            CompetitionNotFoundException.class,
+            RoleNotFoundException.class,
+            ServletException.class,
+            UserNotFoundException.class
+    })
     public String handleApplicationException(
             Exception exception,
             Model model,

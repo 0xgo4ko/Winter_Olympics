@@ -9,5 +9,13 @@ public interface CompetitionService {
 
     List<CompetitionViewDto> getAllCompetitions();
 
+    CompetitionCreateDto getCompetitionForEdit(Long id);
+
+    CompetitionViewDto getCompetitionById(Long id);
+
     void createCompetition(CompetitionCreateDto competitionCreateDto);
+
+    void updateCompetition(Long id, CompetitionCreateDto competitionCreateDto);
+
+    void deleteCompetition(Long id);
 }

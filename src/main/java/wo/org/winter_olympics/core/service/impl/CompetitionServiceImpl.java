@@ -10,6 +10,7 @@ import wo.org.winter_olympics.data.repo.CompetitionRepository;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
+import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 
 import java.util.List;
 
@@ -29,6 +30,20 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .stream()
                 .map(this::mapToViewDto)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompetitionCreateDto getCompetitionForEdit(Long id) {
+        CompetitionEntity competition = getCompetitionEntityById(id);
+
+        return mapToCreateDto(competition);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompetitionViewDto getCompetitionById(Long id) {
+        return mapToViewDto(getCompetitionEntityById(id));
     }
 
     @Override
@@ -57,6 +72,46 @@ public class CompetitionServiceImpl implements CompetitionService {
         competitionRepository.save(competition);
     }
 
+    @Override
+    @Transactional
+    public void updateCompetition(Long id, CompetitionCreateDto competitionCreateDto) {
+        CompetitionEntity competition = getCompetitionEntityById(id);
+
+        if (competitionRepository.existsByNameAndIdNot(competitionCreateDto.getName(), id)) {
+            throw new CompetitionNameAlreadyExistsException(competitionCreateDto.getName());
+        }
+
+        competition.setName(competitionCreateDto.getName());
+        competition.setType(competitionCreateDto.getType());
+        competition.setGender(competitionCreateDto.getGender());
+        competition.setMinimumAge(competitionCreateDto.getMinimumAge());
+        competition.setRegistrationDeadline(competitionCreateDto.getRegistrationDeadline());
+        competition.setSecondRunQualifierCount(null);
+        competition.setPenaltySecondsPerMiss(null);
+
+        if (competitionCreateDto.getType() == CompetitionType.SKI_SLALOM) {
+            competition.setSecondRunQualifierCount(competitionCreateDto.getSecondRunQualifierCount());
+        }
+
+        if (competitionCreateDto.getType() == CompetitionType.BIATHLON) {
+            competition.setPenaltySecondsPerMiss(competitionCreateDto.getPenaltySecondsPerMiss());
+        }
+
+        competitionRepository.save(competition);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCompetition(Long id) {
+        CompetitionEntity competition = getCompetitionEntityById(id);
+        competitionRepository.delete(competition);
+    }
+
+    private CompetitionEntity getCompetitionEntityById(Long id) {
+        return competitionRepository.findById(id)
+                .orElseThrow(() -> new CompetitionNotFoundException(id));
+    }
+
     private CompetitionViewDto mapToViewDto(CompetitionEntity competition) {
         CompetitionViewDto viewDto = new CompetitionViewDto();
         viewDto.setId(competition.getId());
@@ -70,5 +125,18 @@ public class CompetitionServiceImpl implements CompetitionService {
         viewDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
 
         return viewDto;
+    }
+
+    private CompetitionCreateDto mapToCreateDto(CompetitionEntity competition) {
+        CompetitionCreateDto createDto = new CompetitionCreateDto();
+        createDto.setName(competition.getName());
+        createDto.setType(competition.getType());
+        createDto.setGender(competition.getGender());
+        createDto.setMinimumAge(competition.getMinimumAge());
+        createDto.setRegistrationDeadline(competition.getRegistrationDeadline());
+        createDto.setSecondRunQualifierCount(competition.getSecondRunQualifierCount());
+        createDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
+
+        return createDto;
     }
 }
