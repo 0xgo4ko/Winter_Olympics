@@ -7,11 +7,59 @@
     <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
 <body>
-<main class="auth-shell">
-    <section class="auth-panel">
+<main class="auth-shell auth-shell--top">
+    <section class="auth-panel auth-panel--table">
         <a class="auth-panel__back" th:href="@{/}">Winter Olympics</a>
-        <h1>Competitions</h1>
-        <p class="auth-panel__footer">Public competition listing will be added after the admin CRUD flow is complete.</p>
+        <div class="page-header">
+            <div>
+                <h1>Competitions</h1>
+                <p>Browse available competitions and follow their setup details.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Gender</th>
+                    <th>Min Age</th>
+                    <th>Registration Deadline</th>
+                    <th>Status</th>
+                    <th>Settings</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(competitions)}">
+                    <td colspan="8">No competitions are available yet.</td>
+                </tr>
+                <tr th:each="competition : ${competitions}">
+                    <td th:text="${competition.name}">Men Ski Slalom</td>
+                    <td th:text="${competition.type}">SKI_SLALOM</td>
+                    <td th:text="${competition.gender}">MALE</td>
+                    <td th:text="${competition.minimumAge}">18</td>
+                    <td th:text="${competition.registrationDeadline}">2026-06-01</td>
+                    <td th:text="${competition.status}">OPEN</td>
+                    <td>
+                        <span th:if="${competition.secondRunQualifierCount != null}"
+                              th:text="|Top ${competition.secondRunQualifierCount} qualify|">
+                            Top 30 qualify
+                        </span>
+                        <span th:if="${competition.penaltySecondsPerMiss != null}"
+                              th:text="|${competition.penaltySecondsPerMiss}s per miss|">
+                            60s per miss
+                        </span>
+                    </td>
+                    <td class="table-actions">
+                        <span class="action-disabled">Details</span>
+                        <span class="action-disabled action-disabled--join">Join</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </main>
 </body>

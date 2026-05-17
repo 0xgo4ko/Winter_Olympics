@@ -280,6 +280,12 @@ body {
     background: #fae7e8;
 }
 
+.action-disabled--join {
+    color: #1f7a4d;
+    border-color: #b9d9c9;
+    background: #e4f5ec;
+}
+
 @media (max-width: 640px) {
     .auth-panel {
         padding: 24px;
