@@ -10,6 +10,9 @@ import wo.org.winter_olympics.data.entity.enums.UserRole;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.UserRoleRepository;
 import wo.org.winter_olympics.dto.UserRegisterDto;
+import wo.org.winter_olympics.exception.PasswordMismatchException;
+import wo.org.winter_olympics.exception.RoleNotFoundException;
+import wo.org.winter_olympics.exception.UsernameAlreadyExistsException;
 
 @Service
 public class UserRegistrationServiceImpl implements UserRegistrationService {
@@ -32,15 +35,15 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
     @Transactional
     public void register(UserRegisterDto userRegisterDto) {
         if (appUserRepository.existsByUsername(userRegisterDto.getUsername())) {
-            throw new IllegalArgumentException("Username is already taken");
+            throw new UsernameAlreadyExistsException(userRegisterDto.getUsername());
         }
 
         if (!userRegisterDto.getPassword().equals(userRegisterDto.getConfirmPassword())) {
-            throw new IllegalArgumentException("Passwords do not match");
+            throw new PasswordMismatchException();
         }
 
         UserRoleEntity athleteRole = userRoleRepository.findByName(UserRole.ATHLETE)
-                .orElseThrow(() -> new IllegalStateException("Athlete role is not initialized"));
+                .orElseThrow(() -> new RoleNotFoundException(UserRole.ATHLETE.name()));
 
         AppUserEntity user = new AppUserEntity();
         user.setUsername(userRegisterDto.getUsername());

@@ -14,6 +14,9 @@ import wo.org.winter_olympics.data.entity.enums.UserRole;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.UserRoleRepository;
 import wo.org.winter_olympics.dto.UserRegisterDto;
+import wo.org.winter_olympics.exception.PasswordMismatchException;
+import wo.org.winter_olympics.exception.RoleNotFoundException;
+import wo.org.winter_olympics.exception.UsernameAlreadyExistsException;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -80,12 +83,12 @@ class UserRegistrationServiceImplTest {
         UserRegisterDto registerDto = createRegisterDto();
         when(appUserRepository.existsByUsername("athlete1")).thenReturn(true);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        UsernameAlreadyExistsException exception = assertThrows(
+                UsernameAlreadyExistsException.class,
                 () -> userRegistrationService.register(registerDto)
         );
 
-        assertEquals("Username is already taken", exception.getMessage());
+        assertEquals("Username is already taken: athlete1", exception.getMessage());
         verify(appUserRepository, never()).save(any());
     }
 
@@ -96,8 +99,8 @@ class UserRegistrationServiceImplTest {
 
         when(appUserRepository.existsByUsername("athlete1")).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        PasswordMismatchException exception = assertThrows(
+                PasswordMismatchException.class,
                 () -> userRegistrationService.register(registerDto)
         );
 
@@ -112,12 +115,12 @@ class UserRegistrationServiceImplTest {
         when(appUserRepository.existsByUsername("athlete1")).thenReturn(false);
         when(userRoleRepository.findByName(UserRole.ATHLETE)).thenReturn(Optional.empty());
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        RoleNotFoundException exception = assertThrows(
+                RoleNotFoundException.class,
                 () -> userRegistrationService.register(registerDto)
         );
 
-        assertEquals("Athlete role is not initialized", exception.getMessage());
+        assertEquals("Required role was not found: ATHLETE", exception.getMessage());
         verify(appUserRepository, never()).save(any());
     }
 

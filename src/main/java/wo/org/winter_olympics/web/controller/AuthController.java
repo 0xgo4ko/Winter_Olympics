@@ -1,8 +1,8 @@
 package wo.org.winter_olympics.web.controller;
 
 import jakarta.validation.Valid;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -44,27 +44,14 @@ public class AuthController {
             BindingResult bindingResult,
             Model model,
             HttpServletRequest request
-    ) {
+    ) throws ServletException {
         if (bindingResult.hasErrors()) {
             model.addAttribute("genders", Gender.values());
             return "register";
         }
 
-        try {
-            userRegistrationService.register(userRegisterDto);
-        } catch (IllegalArgumentException exception) {
-            model.addAttribute("genders", Gender.values());
-            model.addAttribute("registrationError", exception.getMessage());
-            return "register";
-        }
-
-        try {
-            request.login(userRegisterDto.getUsername(), userRegisterDto.getPassword());
-        } catch (ServletException exception) {
-            model.addAttribute("genders", Gender.values());
-            model.addAttribute("registrationError", "Registration completed, but automatic login failed.");
-            return "register";
-        }
+        userRegistrationService.register(userRegisterDto);
+        request.login(userRegisterDto.getUsername(), userRegisterDto.getPassword());
 
         return "redirect:/";
     }
