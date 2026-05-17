@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Competitions | Winter Olympics</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="auth-shell auth-shell--top">
+    <section class="auth-panel auth-panel--table">
+        <a class="auth-panel__back" th:href="@{/}">Winter Olympics</a>
+        <div class="page-header">
+            <div>
+                <h1>Manage Competitions</h1>
+                <p>Admin-only competition setup for the Winter Olympics.</p>
+            </div>
+            <a class="button button--success" th:href="@{/admin/competitions/create}">Create Competition</a>
+        </div>
+
+        <p class="message message--success" th:if="${competitionSuccess}" th:text="${competitionSuccess}"></p>
+        <p class="message message--error" th:if="${competitionError}" th:text="${competitionError}"></p>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Gender</th>
+                    <th>Min Age</th>
+                    <th>Registration Deadline</th>
+                    <th>Status</th>
+                    <th>Settings</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(competitions)}">
+                    <td colspan="8">No competitions created yet.</td>
+                </tr>
+                <tr th:each="competition : ${competitions}">
+                    <td th:text="${competition.name}">Men Ski Slalom</td>
+                    <td th:text="${competition.type}">SKI_SLALOM</td>
+                    <td th:text="${competition.gender}">MALE</td>
+                    <td th:text="${competition.minimumAge}">18</td>
+                    <td th:text="${competition.registrationDeadline}">2026-06-01</td>
+                    <td th:text="${competition.status}">OPEN</td>
+                    <td>
+                        <span th:if="${competition.secondRunQualifierCount != null}"
+                              th:text="|Top ${competition.secondRunQualifierCount} qualify|">
+                            Top 30 qualify
+                        </span>
+                        <span th:if="${competition.penaltySecondsPerMiss != null}"
+                              th:text="|${competition.penaltySecondsPerMiss}s per miss|">
+                            60s per miss
+                        </span>
+                    </td>
+                    <td class="table-actions">
+                        <span class="action-disabled">Details</span>
+                        <span class="action-disabled">Edit</span>
+                        <span class="action-disabled">Delete</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -18,6 +18,10 @@ body {
     padding: 32px 18px;
 }
 
+.auth-shell--top {
+    align-items: flex-start;
+}
+
 .auth-panel {
     width: min(100%, 460px);
     padding: 30px;
@@ -29,6 +33,10 @@ body {
 
 .auth-panel--wide {
     width: min(100%, 760px);
+}
+
+.auth-panel--table {
+    width: min(100%, 1180px);
 }
 
 .auth-panel__back {
@@ -100,6 +108,11 @@ body {
     background: #234e7e;
 }
 
+.button--success {
+    color: #ffffff;
+    background: #1f7a4d;
+}
+
 .button--danger {
     color: #ffffff;
     background: #8a1f24;
@@ -112,6 +125,10 @@ body {
 }
 
 .form-submit {
+    grid-column: 1 / -1;
+}
+
+.form-field--full {
     grid-column: 1 / -1;
 }
 
@@ -138,6 +155,12 @@ body {
 
 .field-error {
     margin: 0;
+    font-size: 0.86rem;
+}
+
+.field-help {
+    margin: 0;
+    color: #6a7686;
     font-size: 0.86rem;
 }
 
@@ -179,6 +202,70 @@ body {
     margin-top: 22px;
 }
 
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.page-header h1 {
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    margin: 0;
+    color: #546070;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 920px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 13px 12px;
+    border-bottom: 1px solid #d8e0eb;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table th {
+    color: #546070;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+}
+
+.data-table td {
+    color: #18212f;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.action-disabled {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid #d8e0eb;
+    border-radius: 6px;
+    color: #7a8796;
+    background: #f4f7fb;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
 @media (max-width: 640px) {
     .auth-panel {
         padding: 24px;
@@ -186,5 +273,9 @@ body {
 
     .auth-form--grid {
         grid-template-columns: 1fr;
+    }
+
+    .page-header {
+        display: grid;
     }
 }

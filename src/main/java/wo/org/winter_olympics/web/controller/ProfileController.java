@@ -25,7 +25,7 @@ public class ProfileController {
         this.userProfileService = userProfileService;
     }
 
-    @GetMapping("/athlete/profile")
+    @GetMapping("/profile")
     public String profile(Principal principal, Model model) {
         if (!model.containsAttribute("userProfileDto")) {
             model.addAttribute("userProfileDto", userProfileService.getProfile(principal.getName()));
@@ -36,7 +36,12 @@ public class ProfileController {
         return "profile";
     }
 
-    @PostMapping("/athlete/profile")
+    @GetMapping("/athlete/profile")
+    public String legacyAthleteProfile() {
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/profile")
     public String updateProfile(
             Principal principal,
             @Valid @ModelAttribute("userProfileDto") UserProfileDto userProfileDto,
@@ -55,16 +60,16 @@ public class ProfileController {
         userProfileService.updateProfile(principal.getName(), userProfileDto);
         redirectAttributes.addFlashAttribute("profileSuccess", "Profile updated successfully.");
 
-        return "redirect:/athlete/profile";
+        return "redirect:/profile";
     }
 
-    @GetMapping("/athlete/profile/delete")
+    @GetMapping("/profile/delete")
     public String deleteProfileConfirmation(Principal principal, Model model) {
         model.addAttribute("userProfileDto", userProfileService.getProfile(principal.getName()));
         return "profile-delete";
     }
 
-    @PostMapping("/athlete/profile/delete")
+    @PostMapping("/profile/delete")
     public String deleteProfile(Principal principal, HttpServletRequest request) throws ServletException {
         userProfileService.deleteProfile(principal.getName());
         request.logout();
