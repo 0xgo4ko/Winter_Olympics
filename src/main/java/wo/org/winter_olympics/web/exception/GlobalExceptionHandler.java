@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.exception.PasswordMismatchException;
 import wo.org.winter_olympics.exception.RoleNotFoundException;
 import wo.org.winter_olympics.exception.UsernameAlreadyExistsException;
+import wo.org.winter_olympics.exception.UserNotFoundException;
 
 @ControllerAdvice(annotations = Controller.class)
 public class GlobalExceptionHandler {
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
         return "redirect:/register";
     }
 
-    @ExceptionHandler({RoleNotFoundException.class, ServletException.class})
+    @ExceptionHandler({RoleNotFoundException.class, ServletException.class, UserNotFoundException.class})
     public String handleApplicationException(
             Exception exception,
             Model model,
