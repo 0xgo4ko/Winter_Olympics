@@ -218,6 +218,7 @@ class CompetitionServiceImplTest {
         competition.setRegistrationDeadline(LocalDate.now());
 
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.existsByCompetitionId(1L)).thenReturn(true);
 
         competitionService.startCompetition(1L);
 
@@ -234,6 +235,7 @@ class CompetitionServiceImplTest {
         competition.setRegistrationDeadline(LocalDate.now());
 
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.existsByCompetitionId(1L)).thenReturn(true);
 
         competitionService.startCompetition(1L);
 
@@ -256,6 +258,23 @@ class CompetitionServiceImplTest {
         );
 
         assertEquals("You can start the competition after the registration deadline is reached.", exception.getMessage());
+    }
+
+    @Test
+    void startCompetitionThrowsWhenNoAthletesJoined() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        competition.setRegistrationDeadline(LocalDate.now());
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.existsByCompetitionId(1L)).thenReturn(false);
+
+        CompetitionStartException exception = assertThrows(
+                CompetitionStartException.class,
+                () -> competitionService.startCompetition(1L)
+        );
+
+        assertEquals("At least one athlete must join before the competition can start.", exception.getMessage());
+        verify(competitionRepository, never()).save(any());
     }
 
     private CompetitionCreateDto createSkiSlalomDto() {

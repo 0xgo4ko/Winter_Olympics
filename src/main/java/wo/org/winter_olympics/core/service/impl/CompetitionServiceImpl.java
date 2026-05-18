@@ -153,6 +153,10 @@ public class CompetitionServiceImpl implements CompetitionService {
             throw new CompetitionStartException(id, "You can start the competition after the registration deadline is reached.");
         }
 
+        if (!competitionRegistrationRepository.existsByCompetitionId(id)) {
+            throw new CompetitionStartException(id, "At least one athlete must join before the competition can start.");
+        }
+
         if (competition.getType() == CompetitionType.SKI_SLALOM) {
             competition.setStatus(CompetitionStatus.FIRST_RUN);
         } else if (competition.getType() == CompetitionType.BIATHLON) {

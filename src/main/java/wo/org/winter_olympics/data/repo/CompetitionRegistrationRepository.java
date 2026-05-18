@@ -19,4 +19,6 @@ public interface CompetitionRegistrationRepository extends JpaRepository<Competi
     Optional<CompetitionRegistrationEntity> findWithUserAndCompetitionById(Long id);
 
     boolean existsByUserUsername(String username);
+
+    boolean existsByCompetitionId(Long competitionId);
 }

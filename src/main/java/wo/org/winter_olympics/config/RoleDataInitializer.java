@@ -25,7 +25,8 @@ public class RoleDataInitializer implements ApplicationRunner {
 
     private static final String DEFAULT_ADMIN_USERNAME = "admin";
     private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
-    private static final String DEFAULT_COMPETITION_NAME = "Men Ski Slalom";
+    private static final String DEFAULT_SKI_SLALOM_COMPETITION_NAME = "Men Ski Slalom";
+    private static final String DEFAULT_BIATHLON_COMPETITION_NAME = "Men Biathlon";
     private static final String DEFAULT_ATHLETE_PASSWORD = "athlete123";
 
     private final AppUserRepository appUserRepository;
@@ -53,8 +54,10 @@ public class RoleDataInitializer implements ApplicationRunner {
         UserRoleEntity adminRole = createRoleIfMissing(UserRole.ADMIN);
         UserRoleEntity athleteRole = createRoleIfMissing(UserRole.ATHLETE);
         createDefaultAdminIfMissing(adminRole);
-        CompetitionEntity competition = createDefaultCompetitionIfMissing();
-        createDefaultAthletesAndRegistrations(athleteRole, competition);
+        CompetitionEntity skiSlalomCompetition = createDefaultSkiSlalomCompetitionIfMissing();
+        CompetitionEntity biathlonCompetition = createDefaultBiathlonCompetitionIfMissing();
+        createDefaultAthletesAndRegistrations(athleteRole, skiSlalomCompetition);
+        createDefaultBiathlonAthletesAndRegistrations(athleteRole, biathlonCompetition);
     }
 
     private UserRoleEntity createRoleIfMissing(UserRole userRole) {
@@ -80,15 +83,15 @@ public class RoleDataInitializer implements ApplicationRunner {
         appUserRepository.save(admin);
     }
 
-    private CompetitionEntity createDefaultCompetitionIfMissing() {
-        return competitionRepository.findByName(DEFAULT_COMPETITION_NAME)
-                .map(this::updateDefaultCompetitionSettings)
-                .orElseGet(this::createDefaultCompetition);
+    private CompetitionEntity createDefaultSkiSlalomCompetitionIfMissing() {
+        return competitionRepository.findByName(DEFAULT_SKI_SLALOM_COMPETITION_NAME)
+                .map(this::updateDefaultSkiSlalomCompetitionSettings)
+                .orElseGet(this::createDefaultSkiSlalomCompetition);
     }
 
-    private CompetitionEntity createDefaultCompetition() {
+    private CompetitionEntity createDefaultSkiSlalomCompetition() {
         CompetitionEntity competition = new CompetitionEntity();
-        competition.setName(DEFAULT_COMPETITION_NAME);
+        competition.setName(DEFAULT_SKI_SLALOM_COMPETITION_NAME);
         competition.setType(CompetitionType.SKI_SLALOM);
         competition.setGender(Gender.MALE);
         competition.setMinimumAge(18);
@@ -99,8 +102,41 @@ public class RoleDataInitializer implements ApplicationRunner {
         return competitionRepository.save(competition);
     }
 
-    private CompetitionEntity updateDefaultCompetitionSettings(CompetitionEntity competition) {
+    private CompetitionEntity updateDefaultSkiSlalomCompetitionSettings(CompetitionEntity competition) {
         competition.setSecondRunQualifierCount(5);
+
+        if (competition.getStatus() == CompetitionStatus.STARTING_SOON) {
+            competition.setRegistrationDeadline(LocalDate.now());
+        }
+
+        return competitionRepository.save(competition);
+    }
+
+    private CompetitionEntity createDefaultBiathlonCompetitionIfMissing() {
+        return competitionRepository.findByName(DEFAULT_BIATHLON_COMPETITION_NAME)
+                .map(this::updateDefaultBiathlonCompetitionSettings)
+                .orElseGet(this::createDefaultBiathlonCompetition);
+    }
+
+    private CompetitionEntity createDefaultBiathlonCompetition() {
+        CompetitionEntity competition = new CompetitionEntity();
+        competition.setName(DEFAULT_BIATHLON_COMPETITION_NAME);
+        competition.setType(CompetitionType.BIATHLON);
+        competition.setGender(Gender.MALE);
+        competition.setMinimumAge(18);
+        competition.setRegistrationDeadline(LocalDate.now());
+        competition.setStatus(CompetitionStatus.STARTING_SOON);
+        competition.setPenaltySecondsPerMiss(60);
+        competition.setNumberOfLaps(2);
+        competition.setNumberOfTargets(3);
+
+        return competitionRepository.save(competition);
+    }
+
+    private CompetitionEntity updateDefaultBiathlonCompetitionSettings(CompetitionEntity competition) {
+        competition.setPenaltySecondsPerMiss(60);
+        competition.setNumberOfLaps(2);
+        competition.setNumberOfTargets(3);
 
         if (competition.getStatus() == CompetitionStatus.STARTING_SOON) {
             competition.setRegistrationDeadline(LocalDate.now());
@@ -111,6 +147,16 @@ public class RoleDataInitializer implements ApplicationRunner {
 
     private void createDefaultAthletesAndRegistrations(UserRoleEntity athleteRole, CompetitionEntity competition) {
         for (SeedAthlete seedAthlete : seedAthletes()) {
+            AppUserEntity athlete = createDefaultAthleteIfMissing(seedAthlete, athleteRole);
+            registerAthleteIfMissing(athlete, competition);
+        }
+    }
+
+    private void createDefaultBiathlonAthletesAndRegistrations(
+            UserRoleEntity athleteRole,
+            CompetitionEntity competition
+    ) {
+        for (SeedAthlete seedAthlete : seedBiathlonAthletes()) {
             AppUserEntity athlete = createDefaultAthleteIfMissing(seedAthlete, athleteRole);
             registerAthleteIfMissing(athlete, competition);
         }
@@ -157,6 +203,16 @@ public class RoleDataInitializer implements ApplicationRunner {
                 new SeedAthlete("athlete8", "Jan Novak", "Czech Republic", LocalDate.of(2000, 12, 4)),
                 new SeedAthlete("athlete9", "Mika Koskinen", "Finland", LocalDate.of(1999, 2, 26)),
                 new SeedAthlete("athlete10", "Alex Turner", "United States", LocalDate.of(1998, 10, 9))
+        );
+    }
+
+    private List<SeedAthlete> seedBiathlonAthletes() {
+        return List.of(
+                new SeedAthlete("biathlete1", "Nikolay Dimitrov", "Bulgaria", LocalDate.of(1999, 5, 11)),
+                new SeedAthlete("biathlete2", "Jonas Fischer", "Germany", LocalDate.of(1998, 8, 19)),
+                new SeedAthlete("biathlete3", "Oskar Hansen", "Norway", LocalDate.of(2000, 2, 7)),
+                new SeedAthlete("biathlete4", "Matteo Ricci", "Italy", LocalDate.of(1997, 12, 3)),
+                new SeedAthlete("biathlete5", "Antoine Moreau", "France", LocalDate.of(2001, 4, 24))
         );
     }
 
