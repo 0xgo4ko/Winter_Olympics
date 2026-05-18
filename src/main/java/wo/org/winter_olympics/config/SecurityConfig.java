@@ -29,6 +29,11 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                response.sendRedirect(request.getContextPath() + "/?adminOnly=true")
+                        )
+                )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")
                         .permitAll()

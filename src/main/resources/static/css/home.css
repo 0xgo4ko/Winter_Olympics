@@ -176,6 +176,31 @@ body {
     text-decoration: none;
 }
 
+.notice-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(17, 31, 47, 0.38);
+}
+
+.notice-modal__panel {
+    width: min(100%, 420px);
+    padding: 24px;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(20, 38, 58, 0.24);
+}
+
+.notice-modal__panel p {
+    margin: 0 0 18px;
+    color: #18212f;
+    line-height: 1.5;
+}
+
 @media (max-width: 760px) {
     .hero {
         min-height: 56vh;
