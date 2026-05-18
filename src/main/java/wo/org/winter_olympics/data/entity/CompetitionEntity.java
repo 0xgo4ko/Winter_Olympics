@@ -43,6 +43,12 @@ public class CompetitionEntity extends BaseEntityModel {
     @Column(name = "penalty_seconds_per_miss")
     private Integer penaltySecondsPerMiss;
 
+    @Column(name = "number_of_laps")
+    private Integer numberOfLaps;
+
+    @Column(name = "number_of_targets")
+    private Integer numberOfTargets;
+
     public String getName() {
         return name;
     }
@@ -105,5 +111,21 @@ public class CompetitionEntity extends BaseEntityModel {
 
     public void setPenaltySecondsPerMiss(Integer penaltySecondsPerMiss) {
         this.penaltySecondsPerMiss = penaltySecondsPerMiss;
+    }
+
+    public Integer getNumberOfLaps() {
+        return numberOfLaps;
+    }
+
+    public void setNumberOfLaps(Integer numberOfLaps) {
+        this.numberOfLaps = numberOfLaps;
+    }
+
+    public Integer getNumberOfTargets() {
+        return numberOfTargets;
+    }
+
+    public void setNumberOfTargets(Integer numberOfTargets) {
+        this.numberOfTargets = numberOfTargets;
     }
 }

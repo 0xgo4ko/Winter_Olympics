@@ -90,6 +90,8 @@ class CompetitionServiceImplTest {
         assertEquals(CompetitionType.BIATHLON, savedCompetition.getType());
         assertEquals(Gender.FEMALE, savedCompetition.getGender());
         assertEquals(60, savedCompetition.getPenaltySecondsPerMiss());
+        assertEquals(5, savedCompetition.getNumberOfLaps());
+        assertEquals(4, savedCompetition.getNumberOfTargets());
         assertNull(savedCompetition.getSecondRunQualifierCount());
     }
 
@@ -167,6 +169,8 @@ class CompetitionServiceImplTest {
         assertEquals(LocalDate.of(2026, 6, 1), savedCompetition.getRegistrationDeadline());
         assertEquals(CompetitionStatus.STARTING_SOON, savedCompetition.getStatus());
         assertEquals(60, savedCompetition.getPenaltySecondsPerMiss());
+        assertEquals(5, savedCompetition.getNumberOfLaps());
+        assertEquals(4, savedCompetition.getNumberOfTargets());
         assertNull(savedCompetition.getSecondRunQualifierCount());
     }
 
@@ -274,6 +278,8 @@ class CompetitionServiceImplTest {
         createDto.setMinimumAge(18);
         createDto.setRegistrationDeadline(LocalDate.of(2026, 6, 1));
         createDto.setPenaltySecondsPerMiss(60);
+        createDto.setNumberOfLaps(5);
+        createDto.setNumberOfTargets(4);
 
         return createDto;
     }

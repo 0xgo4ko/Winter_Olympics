@@ -72,15 +72,23 @@
                 <span>Penalty seconds per miss</span>
                 <strong th:text="${competition.penaltySecondsPerMiss}">60</strong>
             </div>
+            <div class="details-item" th:if="${competition.numberOfLaps != null}">
+                <span>Laps</span>
+                <strong th:text="${competition.numberOfLaps}">5</strong>
+            </div>
+            <div class="details-item" th:if="${competition.numberOfTargets != null}">
+                <span>Targets</span>
+                <strong th:text="${competition.numberOfTargets}">4</strong>
+            </div>
         </section>
 
         <div class="section-heading">
             <h2>Registered Athletes</h2>
             <p sec:authorize="hasRole('ADMIN')" th:if="${competition.firstRun}">
-                Enter first-run times or mark athletes as DNF before starting the second run.
+                Enter first-run times in seconds or mark athletes as DNF before starting the second run.
             </p>
             <p sec:authorize="hasRole('ADMIN')" th:if="${competition.secondRun}">
-                Enter second-run times or mark qualified athletes as DNF before ending the competition.
+                Enter second-run times in seconds or mark qualified athletes as DNF before ending the competition.
             </p>
         </div>
 
@@ -107,9 +115,9 @@
                     <th>Name</th>
                     <th>Country</th>
                     <th>Gender</th>
-                    <th th:if="${!competition.startingSoon}">First Run</th>
-                    <th th:if="${competition.secondRun || competition.ended}">Second Run</th>
-                    <th th:if="${competition.ended}">Total</th>
+                    <th th:if="${!competition.startingSoon}">First Run (s)</th>
+                    <th th:if="${competition.secondRun || competition.ended}">Second Run (s)</th>
+                    <th th:if="${competition.ended}">Total (s)</th>
                     <th>Result</th>
                 </tr>
                 </thead>
@@ -138,7 +146,7 @@
                                        type="number"
                                        min="0.001"
                                        step="0.001"
-                                       placeholder="0.000"
+                                       placeholder="seconds"
                                        th:value="${firstRunResultsForm.results[participantStat.index].firstRunTime}">
                                 <label class="table-checkbox">
                                     <input type="checkbox"
@@ -176,7 +184,7 @@
                                        type="number"
                                        min="0.001"
                                        step="0.001"
-                                       placeholder="0.000"
+                                       placeholder="seconds"
                                        th:value="${secondRunResultsForm.results[participantStat.index].secondRunTime}">
                                 <label class="table-checkbox">
                                     <input type="checkbox"

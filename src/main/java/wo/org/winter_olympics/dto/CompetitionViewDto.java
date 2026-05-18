@@ -17,6 +17,8 @@ public class CompetitionViewDto {
     private CompetitionStatus status;
     private Integer secondRunQualifierCount;
     private Integer penaltySecondsPerMiss;
+    private Integer numberOfLaps;
+    private Integer numberOfTargets;
     private boolean joinedByCurrentUser;
     private boolean startingSoon;
     private boolean firstRun;
@@ -93,6 +95,22 @@ public class CompetitionViewDto {
 
     public void setPenaltySecondsPerMiss(Integer penaltySecondsPerMiss) {
         this.penaltySecondsPerMiss = penaltySecondsPerMiss;
+    }
+
+    public Integer getNumberOfLaps() {
+        return numberOfLaps;
+    }
+
+    public void setNumberOfLaps(Integer numberOfLaps) {
+        this.numberOfLaps = numberOfLaps;
+    }
+
+    public Integer getNumberOfTargets() {
+        return numberOfTargets;
+    }
+
+    public void setNumberOfTargets(Integer numberOfTargets) {
+        this.numberOfTargets = numberOfTargets;
     }
 
     public boolean isJoinedByCurrentUser() {

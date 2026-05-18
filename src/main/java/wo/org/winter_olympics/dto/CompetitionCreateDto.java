@@ -42,14 +42,23 @@ public class CompetitionCreateDto {
     @Max(3600)
     private Integer penaltySecondsPerMiss;
 
+    @Min(1)
+    @Max(100)
+    private Integer numberOfLaps;
+
+    @Min(1)
+    @Max(100)
+    private Integer numberOfTargets;
+
     @AssertTrue(message = "Ski slalom competitions require a second-run qualifier count")
     public boolean isSkiSlalomConfigurationValid() {
         return type != CompetitionType.SKI_SLALOM || secondRunQualifierCount != null;
     }
 
-    @AssertTrue(message = "Biathlon competitions require penalty seconds per miss")
+    @AssertTrue(message = "Biathlon competitions require penalty seconds per miss, number of laps, and number of targets")
     public boolean isBiathlonConfigurationValid() {
-        return type != CompetitionType.BIATHLON || penaltySecondsPerMiss != null;
+        return type != CompetitionType.BIATHLON
+                || (penaltySecondsPerMiss != null && numberOfLaps != null && numberOfTargets != null);
     }
 
     public String getName() {
@@ -106,5 +115,21 @@ public class CompetitionCreateDto {
 
     public void setPenaltySecondsPerMiss(Integer penaltySecondsPerMiss) {
         this.penaltySecondsPerMiss = penaltySecondsPerMiss;
+    }
+
+    public Integer getNumberOfLaps() {
+        return numberOfLaps;
+    }
+
+    public void setNumberOfLaps(Integer numberOfLaps) {
+        this.numberOfLaps = numberOfLaps;
+    }
+
+    public Integer getNumberOfTargets() {
+        return numberOfTargets;
+    }
+
+    public void setNumberOfTargets(Integer numberOfTargets) {
+        this.numberOfTargets = numberOfTargets;
     }
 }

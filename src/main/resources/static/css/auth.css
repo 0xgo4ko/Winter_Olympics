@@ -133,6 +133,12 @@ body {
     grid-column: 1 / -1;
 }
 
+.compact-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
 .message {
     margin: 0 0 16px;
     padding: 12px 14px;
@@ -442,6 +448,10 @@ body {
     }
 
     .auth-form--grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-fields {
         grid-template-columns: 1fr;
     }
 

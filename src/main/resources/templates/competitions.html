@@ -55,9 +55,13 @@
                               th:text="|Top ${competition.secondRunQualifierCount} qualify|">
                             Top 30 qualify
                         </span>
-                        <span th:if="${competition.penaltySecondsPerMiss != null}"
-                              th:text="|${competition.penaltySecondsPerMiss}s per miss|">
-                            60s per miss
+                        <span th:if="${competition.numberOfLaps != null}"
+                              th:text="|${competition.numberOfLaps} laps|">
+                            5 laps
+                        </span>
+                        <span th:if="${competition.numberOfTargets != null}"
+                              th:text="|, ${competition.numberOfTargets} targets|">
+                            , 4 targets
                         </span>
                     </td>
                     <td class="table-actions">

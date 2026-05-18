@@ -79,11 +79,27 @@
                 <p class="field-error" th:if="${#fields.hasErrors('secondRunQualifierCount')}" th:errors="*{secondRunQualifierCount}"></p>
             </div>
 
-            <div class="form-field">
-                <label for="penaltySecondsPerMiss">Penalty seconds per miss</label>
-                <input id="penaltySecondsPerMiss" th:field="*{penaltySecondsPerMiss}" type="number" min="1" max="3600">
-                <p class="field-help">Used for biathlon.</p>
-                <p class="field-error" th:if="${#fields.hasErrors('penaltySecondsPerMiss')}" th:errors="*{penaltySecondsPerMiss}"></p>
+            <div class="form-field form-field--full">
+                <div class="compact-fields">
+                    <div class="form-field">
+                        <label for="penaltySecondsPerMiss">Penalty seconds per miss</label>
+                        <input id="penaltySecondsPerMiss" th:field="*{penaltySecondsPerMiss}" type="number" min="1" max="3600">
+                        <p class="field-help">Used for biathlon.</p>
+                        <p class="field-error" th:if="${#fields.hasErrors('penaltySecondsPerMiss')}" th:errors="*{penaltySecondsPerMiss}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="numberOfLaps">Laps</label>
+                        <input id="numberOfLaps" th:field="*{numberOfLaps}" type="number" min="1" max="100">
+                        <p class="field-help">Used for biathlon.</p>
+                        <p class="field-error" th:if="${#fields.hasErrors('numberOfLaps')}" th:errors="*{numberOfLaps}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="numberOfTargets">Targets</label>
+                        <input id="numberOfTargets" th:field="*{numberOfTargets}" type="number" min="1" max="100">
+                        <p class="field-help">Used for biathlon.</p>
+                        <p class="field-error" th:if="${#fields.hasErrors('numberOfTargets')}" th:errors="*{numberOfTargets}"></p>
+                    </div>
+                </div>
             </div>
 
             <button class="button button--success form-submit" type="submit">Create Competition</button>

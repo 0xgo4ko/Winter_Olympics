@@ -94,6 +94,8 @@ public class CompetitionServiceImpl implements CompetitionService {
 
         if (competitionCreateDto.getType() == CompetitionType.BIATHLON) {
             competition.setPenaltySecondsPerMiss(competitionCreateDto.getPenaltySecondsPerMiss());
+            competition.setNumberOfLaps(competitionCreateDto.getNumberOfLaps());
+            competition.setNumberOfTargets(competitionCreateDto.getNumberOfTargets());
         }
 
         competitionRepository.save(competition);
@@ -115,6 +117,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         competition.setRegistrationDeadline(competitionCreateDto.getRegistrationDeadline());
         competition.setSecondRunQualifierCount(null);
         competition.setPenaltySecondsPerMiss(null);
+        competition.setNumberOfLaps(null);
+        competition.setNumberOfTargets(null);
 
         if (competitionCreateDto.getType() == CompetitionType.SKI_SLALOM) {
             competition.setSecondRunQualifierCount(competitionCreateDto.getSecondRunQualifierCount());
@@ -122,6 +126,8 @@ public class CompetitionServiceImpl implements CompetitionService {
 
         if (competitionCreateDto.getType() == CompetitionType.BIATHLON) {
             competition.setPenaltySecondsPerMiss(competitionCreateDto.getPenaltySecondsPerMiss());
+            competition.setNumberOfLaps(competitionCreateDto.getNumberOfLaps());
+            competition.setNumberOfTargets(competitionCreateDto.getNumberOfTargets());
         }
 
         competitionRepository.save(competition);
@@ -435,6 +441,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         viewDto.setStatus(competition.getStatus());
         viewDto.setSecondRunQualifierCount(competition.getSecondRunQualifierCount());
         viewDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
+        viewDto.setNumberOfLaps(competition.getNumberOfLaps());
+        viewDto.setNumberOfTargets(competition.getNumberOfTargets());
         viewDto.setStartingSoon(competition.getStatus() == CompetitionStatus.STARTING_SOON);
         viewDto.setFirstRun(competition.getStatus() == CompetitionStatus.FIRST_RUN);
         viewDto.setSecondRun(competition.getStatus() == CompetitionStatus.SECOND_RUN);
@@ -452,6 +460,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         createDto.setRegistrationDeadline(competition.getRegistrationDeadline());
         createDto.setSecondRunQualifierCount(competition.getSecondRunQualifierCount());
         createDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
+        createDto.setNumberOfLaps(competition.getNumberOfLaps());
+        createDto.setNumberOfTargets(competition.getNumberOfTargets());
 
         return createDto;
     }
