@@ -296,6 +296,25 @@ body {
     font-weight: 700;
 }
 
+.standings-row--gold td {
+    background: #fff7d6;
+}
+
+.standings-row--silver td {
+    background: #eef2f6;
+}
+
+.standings-row--bronze td {
+    background: #f8eadc;
+}
+
+.medal {
+    display: inline-flex;
+    min-width: 58px;
+    margin-right: 8px;
+    font-weight: 800;
+}
+
 .table-actions {
     display: flex;
     gap: 8px;

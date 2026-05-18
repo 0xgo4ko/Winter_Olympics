@@ -16,6 +16,7 @@ import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
+import wo.org.winter_olympics.dto.SecondRunResultInputDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
 import wo.org.winter_olympics.exception.CompetitionResultException;
@@ -165,7 +166,7 @@ class CompetitionRegistrationServiceImplTest {
         registration.setCompetition(competition);
         registration.setUser(user);
 
-        when(competitionRepository.existsById(1L)).thenReturn(true);
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
         when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
 
         List<CompetitionParticipantViewDto> participants =
@@ -180,7 +181,7 @@ class CompetitionRegistrationServiceImplTest {
 
     @Test
     void getParticipantsForCompetitionThrowsWhenCompetitionDoesNotExist() {
-        when(competitionRepository.existsById(99L)).thenReturn(false);
+        when(competitionRepository.findById(99L)).thenReturn(Optional.empty());
 
         CompetitionNotFoundException exception = assertThrows(
                 CompetitionNotFoundException.class,
@@ -269,6 +270,107 @@ class CompetitionRegistrationServiceImplTest {
         verify(competitionRepository, never()).save(any());
     }
 
+    @Test
+    void endCompetitionSavesSecondRunResultsAndEndsCompetition() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.SECOND_RUN);
+
+        CompetitionRegistrationEntity first = createRegistration(1L, competition, createUser());
+        first.setQualifiedForSecondRun(true);
+        first.setFirstRunTime(new BigDecimal("57.100"));
+
+        CompetitionRegistrationEntity second = createRegistration(2L, competition, createUser());
+        second.setQualifiedForSecondRun(true);
+        second.setFirstRunTime(new BigDecimal("58.400"));
+
+        CompetitionRegistrationEntity notQualified = createRegistration(3L, competition, createUser());
+        notQualified.setFirstRunTime(new BigDecimal("59.200"));
+
+        List<CompetitionRegistrationEntity> registrations = List.of(first, second, notQualified);
+        List<SecondRunResultInputDto> submittedResults = List.of(
+                createSecondRunResultInput(1L, new BigDecimal("56.900"), false),
+                createSecondRunResultInput(2L, null, true)
+        );
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(registrations);
+
+        competitionRegistrationService.endCompetition(1L, submittedResults);
+
+        assertEquals(CompetitionStatus.ENDED, competition.getStatus());
+        assertEquals(new BigDecimal("56.900"), first.getSecondRunTime());
+        assertFalse(first.isSecondRunDidNotFinish());
+        assertNull(second.getSecondRunTime());
+        assertTrue(second.isSecondRunDidNotFinish());
+        assertNull(notQualified.getSecondRunTime());
+        verify(competitionRegistrationRepository).saveAll(registrations);
+        verify(competitionRepository).save(competition);
+    }
+
+    @Test
+    void endCompetitionThrowsWhenQualifiedAthleteHasMissingResult() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.SECOND_RUN);
+        CompetitionRegistrationEntity registration = createRegistration(1L, competition, createUser());
+        registration.setQualifiedForSecondRun(true);
+        registration.setFirstRunTime(new BigDecimal("57.100"));
+
+        List<SecondRunResultInputDto> submittedResults = List.of(
+                createSecondRunResultInput(1L, null, false)
+        );
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
+
+        CompetitionResultException exception = assertThrows(
+                CompetitionResultException.class,
+                () -> competitionRegistrationService.endCompetition(1L, submittedResults)
+        );
+
+        assertEquals("Every qualified athlete needs a second-run time or DNF before the competition ends.", exception.getMessage());
+        verify(competitionRegistrationRepository, never()).saveAll(any());
+        verify(competitionRepository, never()).save(any());
+    }
+
+    @Test
+    void getParticipantsForEndedCompetitionReturnsQualifiedFinalStandings() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.ENDED);
+
+        CompetitionRegistrationEntity first = createRegistration(1L, competition, createUser());
+        first.setQualifiedForSecondRun(true);
+        first.setFirstRunTime(new BigDecimal("57.100"));
+        first.setSecondRunTime(new BigDecimal("56.900"));
+
+        CompetitionRegistrationEntity second = createRegistration(2L, competition, createUser());
+        second.setQualifiedForSecondRun(true);
+        second.setFirstRunTime(new BigDecimal("58.400"));
+        second.setSecondRunTime(new BigDecimal("57.000"));
+
+        CompetitionRegistrationEntity dnf = createRegistration(3L, competition, createUser());
+        dnf.setQualifiedForSecondRun(true);
+        dnf.setFirstRunTime(new BigDecimal("59.200"));
+        dnf.setSecondRunDidNotFinish(true);
+
+        CompetitionRegistrationEntity notQualified = createRegistration(4L, competition, createUser());
+        notQualified.setFirstRunTime(new BigDecimal("60.000"));
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L))
+                .thenReturn(List.of(second, notQualified, dnf, first));
+
+        List<CompetitionParticipantViewDto> participants =
+                competitionRegistrationService.getParticipantsForCompetition(1L);
+
+        assertEquals(3, participants.size());
+        assertEquals(1L, participants.get(0).getRegistrationId());
+        assertEquals(new BigDecimal("114.000"), participants.get(0).getTotalTime());
+        assertEquals(1, participants.get(0).getRank());
+        assertEquals("Gold", participants.get(0).getMedal());
+        assertEquals(2L, participants.get(1).getRegistrationId());
+        assertEquals("Silver", participants.get(1).getMedal());
+        assertEquals(3L, participants.get(2).getRegistrationId());
+        assertNull(participants.get(2).getTotalTime());
+        assertNull(participants.get(2).getRank());
+    }
+
     private AppUserEntity createUser() {
         AppUserEntity user = new AppUserEntity();
         user.setUsername("athlete1");
@@ -307,6 +409,18 @@ class CompetitionRegistrationServiceImplTest {
         input.setRegistrationId(registrationId);
         input.setFirstRunTime(firstRunTime);
         input.setDidNotFinish(didNotFinish);
+        return input;
+    }
+
+    private SecondRunResultInputDto createSecondRunResultInput(
+            Long registrationId,
+            BigDecimal secondRunTime,
+            boolean secondRunDidNotFinish
+    ) {
+        SecondRunResultInputDto input = new SecondRunResultInputDto();
+        input.setRegistrationId(registrationId);
+        input.setSecondRunTime(secondRunTime);
+        input.setSecondRunDidNotFinish(secondRunDidNotFinish);
         return input;
     }
 }

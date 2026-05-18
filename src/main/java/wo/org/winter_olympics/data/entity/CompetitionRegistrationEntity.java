@@ -36,6 +36,12 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
     @Column(name = "first_run_time", precision = 10, scale = 3)
     private BigDecimal firstRunTime;
 
+    @Column(name = "second_run_did_not_finish", nullable = false)
+    private boolean secondRunDidNotFinish;
+
+    @Column(name = "second_run_time", precision = 10, scale = 3)
+    private BigDecimal secondRunTime;
+
     public CompetitionEntity getCompetition() {
         return competition;
     }
@@ -74,5 +80,21 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
 
     public void setFirstRunTime(BigDecimal firstRunTime) {
         this.firstRunTime = firstRunTime;
+    }
+
+    public boolean isSecondRunDidNotFinish() {
+        return secondRunDidNotFinish;
+    }
+
+    public void setSecondRunDidNotFinish(boolean secondRunDidNotFinish) {
+        this.secondRunDidNotFinish = secondRunDidNotFinish;
+    }
+
+    public BigDecimal getSecondRunTime() {
+        return secondRunTime;
+    }
+
+    public void setSecondRunTime(BigDecimal secondRunTime) {
+        this.secondRunTime = secondRunTime;
     }
 }

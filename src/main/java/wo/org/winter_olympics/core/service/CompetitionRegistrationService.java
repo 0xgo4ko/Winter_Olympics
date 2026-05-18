@@ -2,6 +2,7 @@ package wo.org.winter_olympics.core.service;
 
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
+import wo.org.winter_olympics.dto.SecondRunResultInputDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +18,6 @@ public interface CompetitionRegistrationService {
     void leaveCompetition(Long competitionId, String username);
 
     void startSecondRun(Long competitionId, List<FirstRunResultInputDto> firstRunResults);
+
+    void endCompetition(Long competitionId, List<SecondRunResultInputDto> secondRunResults);
 }

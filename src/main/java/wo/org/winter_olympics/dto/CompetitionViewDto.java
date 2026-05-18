@@ -20,6 +20,8 @@ public class CompetitionViewDto {
     private boolean joinedByCurrentUser;
     private boolean startingSoon;
     private boolean firstRun;
+    private boolean secondRun;
+    private boolean ended;
 
     public Long getId() {
         return id;
@@ -115,5 +117,21 @@ public class CompetitionViewDto {
 
     public void setFirstRun(boolean firstRun) {
         this.firstRun = firstRun;
+    }
+
+    public boolean isSecondRun() {
+        return secondRun;
+    }
+
+    public void setSecondRun(boolean secondRun) {
+        this.secondRun = secondRun;
+    }
+
+    public boolean isEnded() {
+        return ended;
+    }
+
+    public void setEnded(boolean ended) {
+        this.ended = ended;
     }
 }

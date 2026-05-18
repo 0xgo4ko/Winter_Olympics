@@ -12,6 +12,8 @@ import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
 import wo.org.winter_olympics.dto.FirstRunResultsFormDto;
+import wo.org.winter_olympics.dto.SecondRunResultInputDto;
+import wo.org.winter_olympics.dto.SecondRunResultsFormDto;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -56,10 +58,12 @@ public class PublicCompetitionController {
                 competitionRegistrationService.getParticipantsForCompetition(id);
 
         FirstRunResultsFormDto firstRunResultsForm = resolveFirstRunResultsForm(model, participants);
+        SecondRunResultsFormDto secondRunResultsForm = resolveSecondRunResultsForm(model, participants);
 
         model.addAttribute("competition", competitionService.getCompetitionById(id));
         model.addAttribute("participants", participants);
         model.addAttribute("firstRunResultsForm", firstRunResultsForm);
+        model.addAttribute("secondRunResultsForm", secondRunResultsForm);
         return "competition-details";
     }
 
@@ -150,6 +154,76 @@ public class PublicCompetitionController {
         } else {
             input.setFirstRunTime(participant.getFirstRunTime());
             input.setDidNotFinish(participant.isDidNotFinish());
+        }
+
+        return input;
+    }
+
+    private SecondRunResultsFormDto resolveSecondRunResultsForm(
+            Model model,
+            List<CompetitionParticipantViewDto> participants
+    ) {
+        if (model.containsAttribute("secondRunResultsForm")) {
+            SecondRunResultsFormDto submittedForm =
+                    (SecondRunResultsFormDto) model.asMap().get("secondRunResultsForm");
+            return alignSubmittedSecondRunResultsWithParticipants(submittedForm, participants);
+        }
+
+        return createSecondRunResultsForm(participants);
+    }
+
+    private SecondRunResultsFormDto alignSubmittedSecondRunResultsWithParticipants(
+            SecondRunResultsFormDto submittedForm,
+            List<CompetitionParticipantViewDto> participants
+    ) {
+        Map<Long, SecondRunResultInputDto> submittedResultsByRegistrationId =
+                Optional.ofNullable(submittedForm.getResults())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .filter(result -> result.getRegistrationId() != null)
+                        .collect(Collectors.toMap(
+                                SecondRunResultInputDto::getRegistrationId,
+                                Function.identity(),
+                                (first, second) -> first
+                        ));
+
+        SecondRunResultsFormDto alignedForm = new SecondRunResultsFormDto();
+        List<SecondRunResultInputDto> alignedResults = participants.stream()
+                .map(participant -> createSecondRunResultInput(
+                        participant,
+                        submittedResultsByRegistrationId.get(participant.getRegistrationId())
+                ))
+                .toList();
+
+        alignedForm.setResults(alignedResults);
+        return alignedForm;
+    }
+
+    private SecondRunResultsFormDto createSecondRunResultsForm(List<CompetitionParticipantViewDto> participants) {
+        SecondRunResultsFormDto secondRunResultsForm = new SecondRunResultsFormDto();
+        List<SecondRunResultInputDto> results = participants.stream()
+                .map(participant -> createSecondRunResultInput(participant, null))
+                .toList();
+
+        secondRunResultsForm.setResults(results);
+        return secondRunResultsForm;
+    }
+
+    private SecondRunResultInputDto createSecondRunResultInput(
+            CompetitionParticipantViewDto participant,
+            SecondRunResultInputDto submittedResult
+    ) {
+        SecondRunResultInputDto input = new SecondRunResultInputDto();
+        input.setRegistrationId(participant.getRegistrationId());
+
+        if (submittedResult != null) {
+            input.setSecondRunTime(submittedResult.getSecondRunTime());
+            input.setSecondRunDidNotFinish(submittedResult.isSecondRunDidNotFinish());
+            participant.setSecondRunTime(submittedResult.getSecondRunTime());
+            participant.setSecondRunDidNotFinish(submittedResult.isSecondRunDidNotFinish());
+        } else {
+            input.setSecondRunTime(participant.getSecondRunTime());
+            input.setSecondRunDidNotFinish(participant.isSecondRunDidNotFinish());
         }
 
         return input;

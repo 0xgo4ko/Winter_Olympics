@@ -15,6 +15,7 @@ import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.entity.enums.Gender;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.FirstRunResultsFormDto;
+import wo.org.winter_olympics.dto.SecondRunResultsFormDto;
 import wo.org.winter_olympics.exception.CompetitionResultException;
 
 @Controller
@@ -130,6 +131,25 @@ public class AdminCompetitionController {
         }
 
         redirectAttributes.addFlashAttribute("competitionNotice", "Second run started successfully.");
+
+        return "redirect:/competitions/" + id;
+    }
+
+    @PostMapping("/admin/competitions/{id}/end")
+    public String endCompetition(
+            @PathVariable Long id,
+            @ModelAttribute("secondRunResultsForm") SecondRunResultsFormDto secondRunResultsForm,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            competitionRegistrationService.endCompetition(id, secondRunResultsForm.getResults());
+        } catch (CompetitionResultException exception) {
+            redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
+            redirectAttributes.addFlashAttribute("secondRunResultsForm", secondRunResultsForm);
+            return "redirect:/competitions/" + id;
+        }
+
+        redirectAttributes.addFlashAttribute("competitionNotice", "Competition ended successfully.");
 
         return "redirect:/competitions/" + id;
     }

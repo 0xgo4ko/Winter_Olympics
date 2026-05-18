@@ -15,6 +15,12 @@ public class CompetitionParticipantViewDto {
     private BigDecimal firstRunTime;
     private boolean didNotFinish;
     private boolean qualifiedForSecondRun;
+    private BigDecimal secondRunTime;
+    private boolean secondRunDidNotFinish;
+    private BigDecimal totalTime;
+    private Integer rank;
+    private String medal;
+    private String podiumCssClass;
 
     public Long getRegistrationId() {
         return registrationId;
@@ -86,5 +92,53 @@ public class CompetitionParticipantViewDto {
 
     public void setQualifiedForSecondRun(boolean qualifiedForSecondRun) {
         this.qualifiedForSecondRun = qualifiedForSecondRun;
+    }
+
+    public BigDecimal getSecondRunTime() {
+        return secondRunTime;
+    }
+
+    public void setSecondRunTime(BigDecimal secondRunTime) {
+        this.secondRunTime = secondRunTime;
+    }
+
+    public boolean isSecondRunDidNotFinish() {
+        return secondRunDidNotFinish;
+    }
+
+    public void setSecondRunDidNotFinish(boolean secondRunDidNotFinish) {
+        this.secondRunDidNotFinish = secondRunDidNotFinish;
+    }
+
+    public BigDecimal getTotalTime() {
+        return totalTime;
+    }
+
+    public void setTotalTime(BigDecimal totalTime) {
+        this.totalTime = totalTime;
+    }
+
+    public Integer getRank() {
+        return rank;
+    }
+
+    public void setRank(Integer rank) {
+        this.rank = rank;
+    }
+
+    public String getMedal() {
+        return medal;
+    }
+
+    public void setMedal(String medal) {
+        this.medal = medal;
+    }
+
+    public String getPodiumCssClass() {
+        return podiumCssClass;
+    }
+
+    public void setPodiumCssClass(String podiumCssClass) {
+        this.podiumCssClass = podiumCssClass;
     }
 }

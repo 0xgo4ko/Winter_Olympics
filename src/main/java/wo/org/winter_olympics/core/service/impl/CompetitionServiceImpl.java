@@ -149,6 +149,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         viewDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
         viewDto.setStartingSoon(competition.getStatus() == CompetitionStatus.STARTING_SOON);
         viewDto.setFirstRun(competition.getStatus() == CompetitionStatus.FIRST_RUN);
+        viewDto.setSecondRun(competition.getStatus() == CompetitionStatus.SECOND_RUN);
+        viewDto.setEnded(competition.getStatus() == CompetitionStatus.ENDED);
 
         return viewDto;
     }
