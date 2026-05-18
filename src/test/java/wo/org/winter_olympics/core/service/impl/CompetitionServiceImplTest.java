@@ -10,6 +10,8 @@ import wo.org.winter_olympics.data.entity.CompetitionEntity;
 import wo.org.winter_olympics.data.entity.enums.CompetitionStatus;
 import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.entity.enums.Gender;
+import wo.org.winter_olympics.data.repo.AppUserRepository;
+import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
@@ -33,13 +35,23 @@ import static org.mockito.Mockito.when;
 class CompetitionServiceImplTest {
 
     @Mock
+    private AppUserRepository appUserRepository;
+
+    @Mock
     private CompetitionRepository competitionRepository;
+
+    @Mock
+    private CompetitionRegistrationRepository competitionRegistrationRepository;
 
     private CompetitionServiceImpl competitionService;
 
     @BeforeEach
     void setUp() {
-        competitionService = new CompetitionServiceImpl(competitionRepository);
+        competitionService = new CompetitionServiceImpl(
+                appUserRepository,
+                competitionRepository,
+                competitionRegistrationRepository
+        );
     }
 
     @Test

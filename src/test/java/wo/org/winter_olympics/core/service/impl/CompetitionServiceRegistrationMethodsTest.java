@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CompetitionRegistrationServiceImplTest {
+class CompetitionServiceRegistrationMethodsTest {
 
     @Mock
     private AppUserRepository appUserRepository;
@@ -48,11 +48,11 @@ class CompetitionRegistrationServiceImplTest {
     @Mock
     private CompetitionRegistrationRepository competitionRegistrationRepository;
 
-    private CompetitionRegistrationServiceImpl competitionRegistrationService;
+    private CompetitionServiceImpl competitionService;
 
     @BeforeEach
     void setUp() {
-        competitionRegistrationService = new CompetitionRegistrationServiceImpl(
+        competitionService = new CompetitionServiceImpl(
                 appUserRepository,
                 competitionRepository,
                 competitionRegistrationRepository
@@ -68,7 +68,7 @@ class CompetitionRegistrationServiceImplTest {
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
         when(competitionRegistrationRepository.findByUserUsername("athlete1")).thenReturn(Optional.empty());
 
-        competitionRegistrationService.joinCompetition(1L, "athlete1");
+        competitionService.joinCompetition(1L, "athlete1");
 
         ArgumentCaptor<CompetitionRegistrationEntity> registrationCaptor =
                 ArgumentCaptor.forClass(CompetitionRegistrationEntity.class);
@@ -89,7 +89,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionJoinException exception = assertThrows(
                 CompetitionJoinException.class,
-                () -> competitionRegistrationService.joinCompetition(1L, "athlete1")
+                () -> competitionService.joinCompetition(1L, "athlete1")
         );
 
         assertEquals("You cannot join a competition after it has started.", exception.getMessage());
@@ -113,7 +113,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionJoinException exception = assertThrows(
                 CompetitionJoinException.class,
-                () -> competitionRegistrationService.joinCompetition(1L, "athlete1")
+                () -> competitionService.joinCompetition(1L, "athlete1")
         );
 
         assertEquals("You are already registered for another competition.", exception.getMessage());
@@ -130,7 +130,7 @@ class CompetitionRegistrationServiceImplTest {
 
         when(competitionRegistrationRepository.findByUserUsername("athlete1")).thenReturn(Optional.of(registration));
 
-        competitionRegistrationService.leaveCompetition(1L, "athlete1");
+        competitionService.leaveCompetition(1L, "athlete1");
 
         verify(competitionRegistrationRepository).delete(registration);
     }
@@ -147,7 +147,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionJoinException exception = assertThrows(
                 CompetitionJoinException.class,
-                () -> competitionRegistrationService.leaveCompetition(1L, "athlete1")
+                () -> competitionService.leaveCompetition(1L, "athlete1")
         );
 
         assertEquals("You can only leave a competition before it starts.", exception.getMessage());
@@ -170,7 +170,7 @@ class CompetitionRegistrationServiceImplTest {
         when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
 
         List<CompetitionParticipantViewDto> participants =
-                competitionRegistrationService.getParticipantsForCompetition(1L);
+                competitionService.getParticipantsForCompetition(1L);
 
         assertEquals(1, participants.size());
         assertEquals("athlete1", participants.getFirst().getUsername());
@@ -185,7 +185,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionNotFoundException exception = assertThrows(
                 CompetitionNotFoundException.class,
-                () -> competitionRegistrationService.getParticipantsForCompetition(99L)
+                () -> competitionService.getParticipantsForCompetition(99L)
         );
 
         assertEquals("Competition was not found: 99", exception.getMessage());
@@ -212,7 +212,7 @@ class CompetitionRegistrationServiceImplTest {
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
         when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(registrations);
 
-        competitionRegistrationService.startSecondRun(1L, submittedResults);
+        competitionService.startSecondRun(1L, submittedResults);
 
         assertEquals(CompetitionStatus.SECOND_RUN, competition.getStatus());
         assertEquals(new BigDecimal("59.200"), first.getFirstRunTime());
@@ -241,7 +241,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionResultException exception = assertThrows(
                 CompetitionResultException.class,
-                () -> competitionRegistrationService.startSecondRun(1L, submittedResults)
+                () -> competitionService.startSecondRun(1L, submittedResults)
         );
 
         assertEquals("Every athlete needs a first-run time or DNF before second run starts.", exception.getMessage());
@@ -262,7 +262,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionResultException exception = assertThrows(
                 CompetitionResultException.class,
-                () -> competitionRegistrationService.startSecondRun(1L, submittedResults)
+                () -> competitionService.startSecondRun(1L, submittedResults)
         );
 
         assertEquals("First-run time must be greater than zero.", exception.getMessage());
@@ -294,7 +294,7 @@ class CompetitionRegistrationServiceImplTest {
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
         when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(registrations);
 
-        competitionRegistrationService.endCompetition(1L, submittedResults);
+        competitionService.endCompetition(1L, submittedResults);
 
         assertEquals(CompetitionStatus.ENDED, competition.getStatus());
         assertEquals(new BigDecimal("56.900"), first.getSecondRunTime());
@@ -322,7 +322,7 @@ class CompetitionRegistrationServiceImplTest {
 
         CompetitionResultException exception = assertThrows(
                 CompetitionResultException.class,
-                () -> competitionRegistrationService.endCompetition(1L, submittedResults)
+                () -> competitionService.endCompetition(1L, submittedResults)
         );
 
         assertEquals("Every qualified athlete needs a second-run time or DNF before the competition ends.", exception.getMessage());
@@ -357,7 +357,7 @@ class CompetitionRegistrationServiceImplTest {
                 .thenReturn(List.of(second, notQualified, dnf, first));
 
         List<CompetitionParticipantViewDto> participants =
-                competitionRegistrationService.getParticipantsForCompetition(1L);
+                competitionService.getParticipantsForCompetition(1L);
 
         assertEquals(3, participants.size());
         assertEquals(1L, participants.get(0).getRegistrationId());

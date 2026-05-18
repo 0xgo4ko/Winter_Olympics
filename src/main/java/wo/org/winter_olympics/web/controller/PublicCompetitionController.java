@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import wo.org.winter_olympics.core.service.CompetitionRegistrationService;
 import wo.org.winter_olympics.core.service.CompetitionService;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
@@ -27,14 +26,9 @@ import java.util.stream.Collectors;
 public class PublicCompetitionController {
 
     private final CompetitionService competitionService;
-    private final CompetitionRegistrationService competitionRegistrationService;
 
-    public PublicCompetitionController(
-            CompetitionService competitionService,
-            CompetitionRegistrationService competitionRegistrationService
-    ) {
+    public PublicCompetitionController(CompetitionService competitionService) {
         this.competitionService = competitionService;
-        this.competitionRegistrationService = competitionRegistrationService;
     }
 
     @GetMapping("/competitions")
@@ -42,7 +36,7 @@ public class PublicCompetitionController {
         List<CompetitionViewDto> competitions = competitionService.getAllCompetitions();
 
         if (principal != null) {
-            Optional<Long> joinedCompetitionId = competitionRegistrationService.getJoinedCompetitionId(principal.getName());
+            Optional<Long> joinedCompetitionId = competitionService.getJoinedCompetitionId(principal.getName());
             joinedCompetitionId.ifPresent(id -> competitions.forEach(competition ->
                     competition.setJoinedByCurrentUser(id.equals(competition.getId()))
             ));
@@ -55,7 +49,7 @@ public class PublicCompetitionController {
     @GetMapping("/competitions/{id}")
     public String competitionDetails(@PathVariable Long id, Model model) {
         List<CompetitionParticipantViewDto> participants =
-                competitionRegistrationService.getParticipantsForCompetition(id);
+                competitionService.getParticipantsForCompetition(id);
 
         FirstRunResultsFormDto firstRunResultsForm = resolveFirstRunResultsForm(model, participants);
         SecondRunResultsFormDto secondRunResultsForm = resolveSecondRunResultsForm(model, participants);
@@ -73,7 +67,7 @@ public class PublicCompetitionController {
             Principal principal,
             RedirectAttributes redirectAttributes
     ) {
-        competitionRegistrationService.joinCompetition(id, principal.getName());
+        competitionService.joinCompetition(id, principal.getName());
         redirectAttributes.addFlashAttribute("competitionNotice", "You joined the competition successfully.");
         return "redirect:/competitions";
     }
@@ -84,7 +78,7 @@ public class PublicCompetitionController {
             Principal principal,
             RedirectAttributes redirectAttributes
     ) {
-        competitionRegistrationService.leaveCompetition(id, principal.getName());
+        competitionService.leaveCompetition(id, principal.getName());
         redirectAttributes.addFlashAttribute("competitionNotice", "You left the competition successfully.");
         return "redirect:/competitions";
     }
