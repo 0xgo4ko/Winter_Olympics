@@ -54,7 +54,7 @@ class CompetitionRegistrationServiceImplTest {
     @Test
     void joinCompetitionCreatesRegistration() {
         AppUserEntity user = createUser();
-        CompetitionEntity competition = createCompetition(CompetitionStatus.OPEN);
+        CompetitionEntity competition = createCompetition(CompetitionStatus.STARTING_SOON);
 
         when(appUserRepository.findByUsername("athlete1")).thenReturn(Optional.of(user));
         when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
@@ -91,8 +91,8 @@ class CompetitionRegistrationServiceImplTest {
     @Test
     void joinCompetitionThrowsWhenUserAlreadyJoinedAnotherCompetition() {
         AppUserEntity user = createUser();
-        CompetitionEntity competition = createCompetition(CompetitionStatus.OPEN);
-        CompetitionEntity otherCompetition = createCompetition(CompetitionStatus.OPEN);
+        CompetitionEntity competition = createCompetition(CompetitionStatus.STARTING_SOON);
+        CompetitionEntity otherCompetition = createCompetition(CompetitionStatus.STARTING_SOON);
         otherCompetition.setId(2L);
 
         CompetitionRegistrationEntity currentRegistration = new CompetitionRegistrationEntity();
@@ -115,7 +115,7 @@ class CompetitionRegistrationServiceImplTest {
     @Test
     void leaveCompetitionDeletesRegistrationWhenCompetitionIsOpen() {
         AppUserEntity user = createUser();
-        CompetitionEntity competition = createCompetition(CompetitionStatus.OPEN);
+        CompetitionEntity competition = createCompetition(CompetitionStatus.STARTING_SOON);
         CompetitionRegistrationEntity registration = new CompetitionRegistrationEntity();
         registration.setCompetition(competition);
         registration.setUser(user);
@@ -153,7 +153,7 @@ class CompetitionRegistrationServiceImplTest {
         user.setCountry("Bulgaria");
         user.setGender(wo.org.winter_olympics.data.entity.enums.Gender.MALE);
 
-        CompetitionEntity competition = createCompetition(CompetitionStatus.OPEN);
+        CompetitionEntity competition = createCompetition(CompetitionStatus.STARTING_SOON);
         CompetitionRegistrationEntity registration = new CompetitionRegistrationEntity();
         registration.setCompetition(competition);
         registration.setUser(user);

@@ -15,6 +15,7 @@ import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
+import wo.org.winter_olympics.exception.CompetitionStartException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -57,7 +58,7 @@ class CompetitionServiceImplTest {
         assertEquals(Gender.MALE, savedCompetition.getGender());
         assertEquals(18, savedCompetition.getMinimumAge());
         assertEquals(LocalDate.of(2026, 6, 1), savedCompetition.getRegistrationDeadline());
-        assertEquals(CompetitionStatus.OPEN, savedCompetition.getStatus());
+        assertEquals(CompetitionStatus.STARTING_SOON, savedCompetition.getStatus());
         assertEquals(30, savedCompetition.getSecondRunQualifierCount());
         assertNull(savedCompetition.getPenaltySecondsPerMiss());
     }
@@ -102,7 +103,7 @@ class CompetitionServiceImplTest {
         competition.setGender(Gender.MALE);
         competition.setMinimumAge(18);
         competition.setRegistrationDeadline(LocalDate.of(2026, 6, 1));
-        competition.setStatus(CompetitionStatus.OPEN);
+        competition.setStatus(CompetitionStatus.STARTING_SOON);
         competition.setSecondRunQualifierCount(30);
 
         when(competitionRepository.findAll()).thenReturn(List.of(competition));
@@ -114,7 +115,7 @@ class CompetitionServiceImplTest {
         assertEquals(CompetitionType.SKI_SLALOM, competitions.getFirst().getType());
         assertEquals(Gender.MALE, competitions.getFirst().getGender());
         assertEquals(18, competitions.getFirst().getMinimumAge());
-        assertEquals(CompetitionStatus.OPEN, competitions.getFirst().getStatus());
+        assertEquals(CompetitionStatus.STARTING_SOON, competitions.getFirst().getStatus());
         assertEquals(30, competitions.getFirst().getSecondRunQualifierCount());
     }
 
@@ -152,7 +153,7 @@ class CompetitionServiceImplTest {
         assertEquals(Gender.FEMALE, savedCompetition.getGender());
         assertEquals(18, savedCompetition.getMinimumAge());
         assertEquals(LocalDate.of(2026, 6, 1), savedCompetition.getRegistrationDeadline());
-        assertEquals(CompetitionStatus.OPEN, savedCompetition.getStatus());
+        assertEquals(CompetitionStatus.STARTING_SOON, savedCompetition.getStatus());
         assertEquals(60, savedCompetition.getPenaltySecondsPerMiss());
         assertNull(savedCompetition.getSecondRunQualifierCount());
     }
@@ -195,6 +196,52 @@ class CompetitionServiceImplTest {
         assertEquals("Competition was not found: 99", exception.getMessage());
     }
 
+    @Test
+    void startCompetitionMovesSkiSlalomToFirstRun() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        competition.setRegistrationDeadline(LocalDate.now());
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+
+        competitionService.startCompetition(1L);
+
+        ArgumentCaptor<CompetitionEntity> competitionCaptor = ArgumentCaptor.forClass(CompetitionEntity.class);
+        verify(competitionRepository).save(competitionCaptor.capture());
+
+        assertEquals(CompetitionStatus.FIRST_RUN, competitionCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void startCompetitionMovesBiathlonToInProgress() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        competition.setType(CompetitionType.BIATHLON);
+        competition.setRegistrationDeadline(LocalDate.now());
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+
+        competitionService.startCompetition(1L);
+
+        ArgumentCaptor<CompetitionEntity> competitionCaptor = ArgumentCaptor.forClass(CompetitionEntity.class);
+        verify(competitionRepository).save(competitionCaptor.capture());
+
+        assertEquals(CompetitionStatus.IN_PROGRESS, competitionCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void startCompetitionThrowsWhenDeadlineIsInFuture() {
+        CompetitionEntity competition = createSkiSlalomEntity();
+        competition.setRegistrationDeadline(LocalDate.now().plusDays(1));
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+
+        CompetitionStartException exception = assertThrows(
+                CompetitionStartException.class,
+                () -> competitionService.startCompetition(1L)
+        );
+
+        assertEquals("You can start the competition after the registration deadline is reached.", exception.getMessage());
+    }
+
     private CompetitionCreateDto createSkiSlalomDto() {
         CompetitionCreateDto createDto = new CompetitionCreateDto();
         createDto.setName("Men Ski Slalom");
@@ -226,7 +273,7 @@ class CompetitionServiceImplTest {
         competition.setGender(Gender.MALE);
         competition.setMinimumAge(18);
         competition.setRegistrationDeadline(LocalDate.of(2026, 6, 1));
-        competition.setStatus(CompetitionStatus.OPEN);
+        competition.setStatus(CompetitionStatus.STARTING_SOON);
         competition.setSecondRunQualifierCount(30);
 
         return competition;

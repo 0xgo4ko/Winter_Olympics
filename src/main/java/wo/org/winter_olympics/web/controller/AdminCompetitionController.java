@@ -99,6 +99,14 @@ public class AdminCompetitionController {
         return "redirect:/admin/competitions";
     }
 
+    @PostMapping("/admin/competitions/{id}/start")
+    public String startCompetition(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        competitionService.startCompetition(id);
+        redirectAttributes.addFlashAttribute("competitionNotice", "Competition started successfully.");
+
+        return "redirect:/competitions/" + id;
+    }
+
     private void addCompetitionFormModel(Model model) {
         if (!model.containsAttribute("competitionCreateDto")) {
             model.addAttribute("competitionCreateDto", new CompetitionCreateDto());

@@ -94,7 +94,7 @@ public class CompetitionRegistrationServiceImpl implements CompetitionRegistrati
             throw new CompetitionJoinException("You are not registered for this competition.");
         }
 
-        if (competition.getStatus() != CompetitionStatus.OPEN) {
+        if (competition.getStatus() != CompetitionStatus.STARTING_SOON) {
             throw new CompetitionJoinException("You can only leave a competition before it starts.");
         }
 
@@ -112,7 +112,7 @@ public class CompetitionRegistrationServiceImpl implements CompetitionRegistrati
     }
 
     private void validateCompetitionCanBeJoined(CompetitionEntity competition) {
-        if (competition.getStatus() != CompetitionStatus.OPEN) {
+        if (competition.getStatus() != CompetitionStatus.STARTING_SOON) {
             throw new CompetitionJoinException("You cannot join a competition after it has started.");
         }
 

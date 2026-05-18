@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
 import wo.org.winter_olympics.data.common.BaseEntityModel;
 
 @Entity
@@ -24,6 +25,9 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private AppUserEntity user;
 
+    @Column(name = "did_not_finish", nullable = false)
+    private boolean didNotFinish;
+
     public CompetitionEntity getCompetition() {
         return competition;
     }
@@ -38,5 +42,13 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
 
     public void setUser(AppUserEntity user) {
         this.user = user;
+    }
+
+    public boolean isDidNotFinish() {
+        return didNotFinish;
+    }
+
+    public void setDidNotFinish(boolean didNotFinish) {
+        this.didNotFinish = didNotFinish;
     }
 }

@@ -18,6 +18,8 @@ public class CompetitionViewDto {
     private Integer secondRunQualifierCount;
     private Integer penaltySecondsPerMiss;
     private boolean joinedByCurrentUser;
+    private boolean startingSoon;
+    private boolean firstRun;
 
     public Long getId() {
         return id;
@@ -97,5 +99,21 @@ public class CompetitionViewDto {
 
     public void setJoinedByCurrentUser(boolean joinedByCurrentUser) {
         this.joinedByCurrentUser = joinedByCurrentUser;
+    }
+
+    public boolean isStartingSoon() {
+        return startingSoon;
+    }
+
+    public void setStartingSoon(boolean startingSoon) {
+        this.startingSoon = startingSoon;
+    }
+
+    public boolean isFirstRun() {
+        return firstRun;
+    }
+
+    public void setFirstRun(boolean firstRun) {
+        this.firstRun = firstRun;
     }
 }

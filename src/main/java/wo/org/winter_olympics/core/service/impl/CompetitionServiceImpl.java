@@ -11,7 +11,9 @@ import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
+import wo.org.winter_olympics.exception.CompetitionStartException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -59,7 +61,7 @@ public class CompetitionServiceImpl implements CompetitionService {
         competition.setGender(competitionCreateDto.getGender());
         competition.setMinimumAge(competitionCreateDto.getMinimumAge());
         competition.setRegistrationDeadline(competitionCreateDto.getRegistrationDeadline());
-        competition.setStatus(CompetitionStatus.OPEN);
+        competition.setStatus(CompetitionStatus.STARTING_SOON);
 
         if (competitionCreateDto.getType() == CompetitionType.SKI_SLALOM) {
             competition.setSecondRunQualifierCount(competitionCreateDto.getSecondRunQualifierCount());
@@ -107,6 +109,28 @@ public class CompetitionServiceImpl implements CompetitionService {
         competitionRepository.delete(competition);
     }
 
+    @Override
+    @Transactional
+    public void startCompetition(Long id) {
+        CompetitionEntity competition = getCompetitionEntityById(id);
+
+        if (competition.getStatus() != CompetitionStatus.STARTING_SOON) {
+            throw new CompetitionStartException(id, "This competition has already started or ended.");
+        }
+
+        if (competition.getRegistrationDeadline().isAfter(LocalDate.now())) {
+            throw new CompetitionStartException(id, "You can start the competition after the registration deadline is reached.");
+        }
+
+        if (competition.getType() == CompetitionType.SKI_SLALOM) {
+            competition.setStatus(CompetitionStatus.FIRST_RUN);
+        } else if (competition.getType() == CompetitionType.BIATHLON) {
+            competition.setStatus(CompetitionStatus.IN_PROGRESS);
+        }
+
+        competitionRepository.save(competition);
+    }
+
     private CompetitionEntity getCompetitionEntityById(Long id) {
         return competitionRepository.findById(id)
                 .orElseThrow(() -> new CompetitionNotFoundException(id));
@@ -123,6 +147,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         viewDto.setStatus(competition.getStatus());
         viewDto.setSecondRunQualifierCount(competition.getSecondRunQualifierCount());
         viewDto.setPenaltySecondsPerMiss(competition.getPenaltySecondsPerMiss());
+        viewDto.setStartingSoon(competition.getStatus() == CompetitionStatus.STARTING_SOON);
+        viewDto.setFirstRun(competition.getStatus() == CompetitionStatus.FIRST_RUN);
 
         return viewDto;
     }

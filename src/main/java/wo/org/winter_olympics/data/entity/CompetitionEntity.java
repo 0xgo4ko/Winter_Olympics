@@ -35,7 +35,7 @@ public class CompetitionEntity extends BaseEntityModel {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private CompetitionStatus status = CompetitionStatus.OPEN;
+    private CompetitionStatus status = CompetitionStatus.STARTING_SOON;
 
     @Column(name = "second_run_qualifier_count")
     private Integer secondRunQualifierCount;
