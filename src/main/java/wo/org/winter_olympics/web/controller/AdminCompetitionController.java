@@ -9,17 +9,25 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import wo.org.winter_olympics.core.service.CompetitionRegistrationService;
 import wo.org.winter_olympics.core.service.CompetitionService;
 import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.entity.enums.Gender;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
+import wo.org.winter_olympics.dto.FirstRunResultsFormDto;
+import wo.org.winter_olympics.exception.CompetitionResultException;
 
 @Controller
 public class AdminCompetitionController {
 
+    private final CompetitionRegistrationService competitionRegistrationService;
     private final CompetitionService competitionService;
 
-    public AdminCompetitionController(CompetitionService competitionService) {
+    public AdminCompetitionController(
+            CompetitionRegistrationService competitionRegistrationService,
+            CompetitionService competitionService
+    ) {
+        this.competitionRegistrationService = competitionRegistrationService;
         this.competitionService = competitionService;
     }
 
@@ -103,6 +111,25 @@ public class AdminCompetitionController {
     public String startCompetition(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         competitionService.startCompetition(id);
         redirectAttributes.addFlashAttribute("competitionNotice", "Competition started successfully.");
+
+        return "redirect:/competitions/" + id;
+    }
+
+    @PostMapping("/admin/competitions/{id}/second-run/start")
+    public String startSecondRun(
+            @PathVariable Long id,
+            @ModelAttribute("firstRunResultsForm") FirstRunResultsFormDto firstRunResultsForm,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            competitionRegistrationService.startSecondRun(id, firstRunResultsForm.getResults());
+        } catch (CompetitionResultException exception) {
+            redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
+            redirectAttributes.addFlashAttribute("firstRunResultsForm", firstRunResultsForm);
+            return "redirect:/competitions/" + id;
+        }
+
+        redirectAttributes.addFlashAttribute("competitionNotice", "Second run started successfully.");
 
         return "redirect:/competitions/" + id;
     }

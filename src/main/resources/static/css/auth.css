@@ -270,6 +270,32 @@ body {
     font: inherit;
 }
 
+.results-form {
+    margin: 0;
+}
+
+.result-row-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+}
+
+.table-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #546070;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.result-value {
+    color: #18212f;
+    font-weight: 700;
+}
+
 .table-actions {
     display: flex;
     gap: 8px;

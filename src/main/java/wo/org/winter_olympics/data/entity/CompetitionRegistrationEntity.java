@@ -10,6 +10,8 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Column;
 import wo.org.winter_olympics.data.common.BaseEntityModel;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(
         name = "competition_registrations",
@@ -27,6 +29,12 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
 
     @Column(name = "did_not_finish", nullable = false)
     private boolean didNotFinish;
+
+    @Column(name = "qualified_for_second_run", nullable = false)
+    private boolean qualifiedForSecondRun;
+
+    @Column(name = "first_run_time", precision = 10, scale = 3)
+    private BigDecimal firstRunTime;
 
     public CompetitionEntity getCompetition() {
         return competition;
@@ -50,5 +58,21 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
 
     public void setDidNotFinish(boolean didNotFinish) {
         this.didNotFinish = didNotFinish;
+    }
+
+    public boolean isQualifiedForSecondRun() {
+        return qualifiedForSecondRun;
+    }
+
+    public void setQualifiedForSecondRun(boolean qualifiedForSecondRun) {
+        this.qualifiedForSecondRun = qualifiedForSecondRun;
+    }
+
+    public BigDecimal getFirstRunTime() {
+        return firstRunTime;
+    }
+
+    public void setFirstRunTime(BigDecimal firstRunTime) {
+        this.firstRunTime = firstRunTime;
     }
 }

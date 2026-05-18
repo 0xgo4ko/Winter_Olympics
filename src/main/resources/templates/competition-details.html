@@ -31,6 +31,10 @@
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="button button--success" type="submit">Start Competition</button>
                 </form>
+                <button th:if="${competition.firstRun}"
+                        class="button button--success"
+                        type="submit"
+                        form="first-run-results-form">Start Second Run</button>
                 <a class="button button--secondary-dark" th:href="@{/admin/competitions}">Admin Panel</a>
             </div>
         </div>
@@ -68,9 +72,17 @@
 
         <div class="section-heading">
             <h2>Registered Athletes</h2>
-            <p sec:authorize="hasRole('ADMIN')">Result input controls will be added in the next management step.</p>
+            <p sec:authorize="hasRole('ADMIN')" th:if="${competition.firstRun}">
+                Enter first-run times or mark athletes as DNF before starting the second run.
+            </p>
         </div>
 
+        <form id="first-run-results-form"
+              class="results-form"
+              th:object="${firstRunResultsForm}"
+              th:action="@{/admin/competitions/{id}/second-run/start(id=${competition.id})}"
+              method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <div class="table-wrap">
             <table class="data-table">
                 <thead>
@@ -79,29 +91,58 @@
                     <th>Name</th>
                     <th>Country</th>
                     <th>Gender</th>
-                    <th sec:authorize="hasRole('ADMIN')"
-                        th:if="${competition.firstRun}">First Run Time</th>
+                    <th th:if="${!competition.startingSoon}">First Run</th>
                     <th>Result</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(participants)}">
-                    <td colspan="6">No athletes have joined this competition yet.</td>
+                    <td th:colspan="${competition.startingSoon ? 5 : 6}">
+                        No athletes have joined this competition yet.
+                    </td>
                 </tr>
-                <tr th:each="participant : ${participants}">
+                <tr th:each="participant, participantStat : ${participants}">
                     <td th:text="${participant.username}">athlete1</td>
                     <td th:text="${participant.fullName}">Ivan Petrov</td>
                     <td th:text="${participant.country}">Bulgaria</td>
                     <td th:text="${participant.gender}">MALE</td>
-                    <td sec:authorize="hasRole('ADMIN')"
-                        th:if="${competition.firstRun}">
-                        <input class="table-input" type="number" min="0" step="0.001" placeholder="0.000">
+                    <td th:if="${!competition.startingSoon}">
+                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.firstRun}">
+                            <div class="result-row-form">
+                                <input type="hidden"
+                                       th:field="*{results[__${participantStat.index}__].registrationId}">
+                                <input class="table-input"
+                                       type="number"
+                                       min="0.001"
+                                       step="0.001"
+                                       placeholder="0.000"
+                                       th:field="*{results[__${participantStat.index}__].firstRunTime}">
+                                <label class="table-checkbox">
+                                    <input type="checkbox"
+                                           th:field="*{results[__${participantStat.index}__].didNotFinish}">
+                                    DNF
+                                </label>
+                            </div>
+                        </div>
+                        <div class="result-value" sec:authorize="!hasRole('ADMIN')" th:if="${competition.firstRun}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.firstRunTime != null}"
+                                  th:text="${participant.firstRunTime}">57.342</span>
+                            <span th:if="${!participant.didNotFinish && participant.firstRunTime == null}">Pending</span>
+                        </div>
+                        <div class="result-value" th:if="${!competition.firstRun}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.firstRunTime != null}"
+                                  th:text="${participant.firstRunTime}">57.342</span>
+                            <span th:if="${!participant.didNotFinish && participant.firstRunTime == null}">Pending</span>
+                        </div>
                     </td>
                     <td th:text="${participant.resultStatus}">Pending</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+        </form>
     </section>
 </main>
 </body>

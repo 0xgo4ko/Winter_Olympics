@@ -10,19 +10,26 @@ import wo.org.winter_olympics.data.entity.AppUserEntity;
 import wo.org.winter_olympics.data.entity.CompetitionEntity;
 import wo.org.winter_olympics.data.entity.CompetitionRegistrationEntity;
 import wo.org.winter_olympics.data.entity.enums.CompetitionStatus;
+import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
+import wo.org.winter_olympics.dto.FirstRunResultInputDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
+import wo.org.winter_olympics.exception.CompetitionResultException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -183,6 +190,85 @@ class CompetitionRegistrationServiceImplTest {
         assertEquals("Competition was not found: 99", exception.getMessage());
     }
 
+    @Test
+    void startSecondRunSavesSubmittedResultsAndQualifiesFastestAthletes() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.FIRST_RUN);
+        competition.setSecondRunQualifierCount(2);
+
+        CompetitionRegistrationEntity first = createRegistration(1L, competition, createUser());
+        CompetitionRegistrationEntity second = createRegistration(2L, competition, createUser());
+        CompetitionRegistrationEntity third = createRegistration(3L, competition, createUser());
+        CompetitionRegistrationEntity dnf = createRegistration(4L, competition, createUser());
+
+        List<CompetitionRegistrationEntity> registrations = List.of(first, second, third, dnf);
+        List<FirstRunResultInputDto> submittedResults = List.of(
+                createFirstRunResultInput(1L, new BigDecimal("59.200"), false),
+                createFirstRunResultInput(2L, new BigDecimal("57.100"), false),
+                createFirstRunResultInput(3L, new BigDecimal("58.400"), false),
+                createFirstRunResultInput(4L, null, true)
+        );
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(registrations);
+
+        competitionRegistrationService.startSecondRun(1L, submittedResults);
+
+        assertEquals(CompetitionStatus.SECOND_RUN, competition.getStatus());
+        assertEquals(new BigDecimal("59.200"), first.getFirstRunTime());
+        assertEquals(new BigDecimal("57.100"), second.getFirstRunTime());
+        assertEquals(new BigDecimal("58.400"), third.getFirstRunTime());
+        assertNull(dnf.getFirstRunTime());
+        assertTrue(dnf.isDidNotFinish());
+        assertFalse(first.isQualifiedForSecondRun());
+        assertTrue(second.isQualifiedForSecondRun());
+        assertTrue(third.isQualifiedForSecondRun());
+        assertFalse(dnf.isQualifiedForSecondRun());
+        verify(competitionRegistrationRepository).saveAll(registrations);
+        verify(competitionRepository).save(competition);
+    }
+
+    @Test
+    void startSecondRunThrowsWhenAnyAthleteHasMissingResult() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.FIRST_RUN);
+        CompetitionRegistrationEntity registration = createRegistration(1L, competition, createUser());
+        List<FirstRunResultInputDto> submittedResults = List.of(
+                createFirstRunResultInput(1L, null, false)
+        );
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
+
+        CompetitionResultException exception = assertThrows(
+                CompetitionResultException.class,
+                () -> competitionRegistrationService.startSecondRun(1L, submittedResults)
+        );
+
+        assertEquals("Every athlete needs a first-run time or DNF before second run starts.", exception.getMessage());
+        verify(competitionRegistrationRepository, never()).saveAll(any());
+        verify(competitionRepository, never()).save(any());
+    }
+
+    @Test
+    void startSecondRunThrowsWhenSubmittedTimeIsNotPositive() {
+        CompetitionEntity competition = createCompetition(CompetitionStatus.FIRST_RUN);
+        CompetitionRegistrationEntity registration = createRegistration(1L, competition, createUser());
+        List<FirstRunResultInputDto> submittedResults = List.of(
+                createFirstRunResultInput(1L, BigDecimal.ZERO, false)
+        );
+
+        when(competitionRepository.findById(1L)).thenReturn(Optional.of(competition));
+        when(competitionRegistrationRepository.findAllByCompetitionId(1L)).thenReturn(List.of(registration));
+
+        CompetitionResultException exception = assertThrows(
+                CompetitionResultException.class,
+                () -> competitionRegistrationService.startSecondRun(1L, submittedResults)
+        );
+
+        assertEquals("First-run time must be greater than zero.", exception.getMessage());
+        verify(competitionRegistrationRepository, never()).saveAll(any());
+        verify(competitionRepository, never()).save(any());
+    }
+
     private AppUserEntity createUser() {
         AppUserEntity user = new AppUserEntity();
         user.setUsername("athlete1");
@@ -193,8 +279,34 @@ class CompetitionRegistrationServiceImplTest {
         CompetitionEntity competition = new CompetitionEntity();
         competition.setId(1L);
         competition.setName("Men Ski Slalom");
+        competition.setType(CompetitionType.SKI_SLALOM);
         competition.setStatus(status);
         competition.setRegistrationDeadline(LocalDate.now().plusDays(10));
+        competition.setSecondRunQualifierCount(5);
         return competition;
+    }
+
+    private CompetitionRegistrationEntity createRegistration(
+            Long id,
+            CompetitionEntity competition,
+            AppUserEntity user
+    ) {
+        CompetitionRegistrationEntity registration = new CompetitionRegistrationEntity();
+        registration.setId(id);
+        registration.setCompetition(competition);
+        registration.setUser(user);
+        return registration;
+    }
+
+    private FirstRunResultInputDto createFirstRunResultInput(
+            Long registrationId,
+            BigDecimal firstRunTime,
+            boolean didNotFinish
+    ) {
+        FirstRunResultInputDto input = new FirstRunResultInputDto();
+        input.setRegistrationId(registrationId);
+        input.setFirstRunTime(firstRunTime);
+        input.setDidNotFinish(didNotFinish);
+        return input;
     }
 }

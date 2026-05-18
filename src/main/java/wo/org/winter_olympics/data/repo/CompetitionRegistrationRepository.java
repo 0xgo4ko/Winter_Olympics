@@ -15,5 +15,8 @@ public interface CompetitionRegistrationRepository extends JpaRepository<Competi
     @EntityGraph(attributePaths = {"user", "competition"})
     List<CompetitionRegistrationEntity> findAllByCompetitionId(Long competitionId);
 
+    @EntityGraph(attributePaths = {"user", "competition"})
+    Optional<CompetitionRegistrationEntity> findWithUserAndCompetitionById(Long id);
+
     boolean existsByUserUsername(String username);
 }

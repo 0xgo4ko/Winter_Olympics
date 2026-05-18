@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
 import wo.org.winter_olympics.exception.CompetitionNotFoundException;
+import wo.org.winter_olympics.exception.CompetitionResultException;
 import wo.org.winter_olympics.exception.CompetitionStartException;
 import wo.org.winter_olympics.exception.PasswordMismatchException;
 import wo.org.winter_olympics.exception.RoleNotFoundException;
@@ -54,6 +55,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CompetitionStartException.class)
     public String handleCompetitionStartException(
             CompetitionStartException exception,
+            RedirectAttributes redirectAttributes
+    ) {
+        redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
+        return "redirect:/competitions/" + exception.getCompetitionId();
+    }
+
+    @ExceptionHandler(CompetitionResultException.class)
+    public String handleCompetitionResultException(
+            CompetitionResultException exception,
             RedirectAttributes redirectAttributes
     ) {
         redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
