@@ -276,6 +276,10 @@ body {
     font: inherit;
 }
 
+.table-input--small {
+    width: 84px;
+}
+
 .results-form {
     margin: 0;
 }

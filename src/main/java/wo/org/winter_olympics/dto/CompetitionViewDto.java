@@ -23,7 +23,10 @@ public class CompetitionViewDto {
     private boolean startingSoon;
     private boolean firstRun;
     private boolean secondRun;
+    private boolean inProgress;
     private boolean ended;
+    private boolean skiSlalom;
+    private boolean biathlon;
 
     public Long getId() {
         return id;
@@ -145,11 +148,35 @@ public class CompetitionViewDto {
         this.secondRun = secondRun;
     }
 
+    public boolean isInProgress() {
+        return inProgress;
+    }
+
+    public void setInProgress(boolean inProgress) {
+        this.inProgress = inProgress;
+    }
+
     public boolean isEnded() {
         return ended;
     }
 
     public void setEnded(boolean ended) {
         this.ended = ended;
+    }
+
+    public boolean isSkiSlalom() {
+        return skiSlalom;
+    }
+
+    public void setSkiSlalom(boolean skiSlalom) {
+        this.skiSlalom = skiSlalom;
+    }
+
+    public boolean isBiathlon() {
+        return biathlon;
+    }
+
+    public void setBiathlon(boolean biathlon) {
+        this.biathlon = biathlon;
     }
 }

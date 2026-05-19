@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.core.service.CompetitionService;
+import wo.org.winter_olympics.dto.BiathlonResultInputDto;
+import wo.org.winter_olympics.dto.BiathlonResultsFormDto;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
@@ -53,11 +55,13 @@ public class PublicCompetitionController {
 
         FirstRunResultsFormDto firstRunResultsForm = resolveFirstRunResultsForm(model, participants);
         SecondRunResultsFormDto secondRunResultsForm = resolveSecondRunResultsForm(model, participants);
+        BiathlonResultsFormDto biathlonResultsForm = resolveBiathlonResultsForm(model, participants);
 
         model.addAttribute("competition", competitionService.getCompetitionById(id));
         model.addAttribute("participants", participants);
         model.addAttribute("firstRunResultsForm", firstRunResultsForm);
         model.addAttribute("secondRunResultsForm", secondRunResultsForm);
+        model.addAttribute("biathlonResultsForm", biathlonResultsForm);
         return "competition-details";
     }
 
@@ -218,6 +222,79 @@ public class PublicCompetitionController {
         } else {
             input.setSecondRunTime(participant.getSecondRunTime());
             input.setSecondRunDidNotFinish(participant.isSecondRunDidNotFinish());
+        }
+
+        return input;
+    }
+
+    private BiathlonResultsFormDto resolveBiathlonResultsForm(
+            Model model,
+            List<CompetitionParticipantViewDto> participants
+    ) {
+        if (model.containsAttribute("biathlonResultsForm")) {
+            BiathlonResultsFormDto submittedForm =
+                    (BiathlonResultsFormDto) model.asMap().get("biathlonResultsForm");
+            return alignSubmittedBiathlonResultsWithParticipants(submittedForm, participants);
+        }
+
+        return createBiathlonResultsForm(participants);
+    }
+
+    private BiathlonResultsFormDto alignSubmittedBiathlonResultsWithParticipants(
+            BiathlonResultsFormDto submittedForm,
+            List<CompetitionParticipantViewDto> participants
+    ) {
+        Map<Long, BiathlonResultInputDto> submittedResultsByRegistrationId =
+                Optional.ofNullable(submittedForm.getResults())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .filter(result -> result.getRegistrationId() != null)
+                        .collect(Collectors.toMap(
+                                BiathlonResultInputDto::getRegistrationId,
+                                Function.identity(),
+                                (first, second) -> first
+                        ));
+
+        BiathlonResultsFormDto alignedForm = new BiathlonResultsFormDto();
+        List<BiathlonResultInputDto> alignedResults = participants.stream()
+                .map(participant -> createBiathlonResultInput(
+                        participant,
+                        submittedResultsByRegistrationId.get(participant.getRegistrationId())
+                ))
+                .toList();
+
+        alignedForm.setResults(alignedResults);
+        return alignedForm;
+    }
+
+    private BiathlonResultsFormDto createBiathlonResultsForm(List<CompetitionParticipantViewDto> participants) {
+        BiathlonResultsFormDto biathlonResultsForm = new BiathlonResultsFormDto();
+        List<BiathlonResultInputDto> results = participants.stream()
+                .map(participant -> createBiathlonResultInput(participant, null))
+                .toList();
+
+        biathlonResultsForm.setResults(results);
+        return biathlonResultsForm;
+    }
+
+    private BiathlonResultInputDto createBiathlonResultInput(
+            CompetitionParticipantViewDto participant,
+            BiathlonResultInputDto submittedResult
+    ) {
+        BiathlonResultInputDto input = new BiathlonResultInputDto();
+        input.setRegistrationId(participant.getRegistrationId());
+
+        if (submittedResult != null) {
+            input.setBiathlonTime(submittedResult.getBiathlonTime());
+            input.setMissedTargets(submittedResult.getMissedTargets());
+            input.setDidNotFinish(submittedResult.isDidNotFinish());
+            participant.setBiathlonTime(submittedResult.getBiathlonTime());
+            participant.setMissedTargets(submittedResult.getMissedTargets());
+            participant.setDidNotFinish(submittedResult.isDidNotFinish());
+        } else {
+            input.setBiathlonTime(participant.getBiathlonTime());
+            input.setMissedTargets(participant.getMissedTargets());
+            input.setDidNotFinish(participant.isDidNotFinish());
         }
 
         return input;

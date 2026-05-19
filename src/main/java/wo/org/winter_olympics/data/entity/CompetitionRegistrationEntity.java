@@ -42,6 +42,12 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
     @Column(name = "second_run_time", precision = 10, scale = 3)
     private BigDecimal secondRunTime;
 
+    @Column(name = "biathlon_time", precision = 10, scale = 3)
+    private BigDecimal biathlonTime;
+
+    @Column(name = "missed_targets")
+    private Integer missedTargets;
+
     public CompetitionEntity getCompetition() {
         return competition;
     }
@@ -96,5 +102,21 @@ public class CompetitionRegistrationEntity extends BaseEntityModel {
 
     public void setSecondRunTime(BigDecimal secondRunTime) {
         this.secondRunTime = secondRunTime;
+    }
+
+    public BigDecimal getBiathlonTime() {
+        return biathlonTime;
+    }
+
+    public void setBiathlonTime(BigDecimal biathlonTime) {
+        this.biathlonTime = biathlonTime;
+    }
+
+    public Integer getMissedTargets() {
+        return missedTargets;
+    }
+
+    public void setMissedTargets(Integer missedTargets) {
+        this.missedTargets = missedTargets;
     }
 }

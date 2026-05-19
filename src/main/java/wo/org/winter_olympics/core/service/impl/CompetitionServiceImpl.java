@@ -11,6 +11,7 @@ import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.repo.AppUserRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRegistrationRepository;
 import wo.org.winter_olympics.data.repo.CompetitionRepository;
+import wo.org.winter_olympics.dto.BiathlonResultInputDto;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
@@ -305,6 +306,30 @@ public class CompetitionServiceImpl implements CompetitionService {
         competitionRepository.save(competition);
     }
 
+    @Override
+    @Transactional
+    public void endBiathlonCompetition(Long competitionId, List<BiathlonResultInputDto> biathlonResults) {
+        CompetitionEntity competition = getCompetitionEntityById(competitionId);
+
+        if (competition.getType() != CompetitionType.BIATHLON) {
+            throw new CompetitionResultException(competitionId, "Ending this flow is available only for biathlon competitions.");
+        }
+
+        if (competition.getStatus() != CompetitionStatus.IN_PROGRESS) {
+            throw new CompetitionResultException(competitionId, "Biathlon can be ended only while it is in progress.");
+        }
+
+        List<CompetitionRegistrationEntity> registrations =
+                competitionRegistrationRepository.findAllByCompetitionId(competitionId);
+
+        applyBiathlonResults(competition, registrations, biathlonResults);
+
+        competition.setStatus(CompetitionStatus.ENDED);
+
+        competitionRegistrationRepository.saveAll(registrations);
+        competitionRepository.save(competition);
+    }
+
     private AppUserEntity getUser(String username) {
         return appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -424,6 +449,73 @@ public class CompetitionServiceImpl implements CompetitionService {
         }
     }
 
+    private void applyBiathlonResults(
+            CompetitionEntity competition,
+            List<CompetitionRegistrationEntity> registrations,
+            List<BiathlonResultInputDto> biathlonResults
+    ) {
+        Long competitionId = competition.getId();
+        List<BiathlonResultInputDto> submittedResults =
+                biathlonResults == null ? Collections.emptyList() : biathlonResults;
+
+        Map<Long, CompetitionRegistrationEntity> registrationsById = registrations.stream()
+                .collect(Collectors.toMap(CompetitionRegistrationEntity::getId, Function.identity()));
+
+        Map<Long, BiathlonResultInputDto> resultsByRegistrationId = submittedResults.stream()
+                .filter(result -> result.getRegistrationId() != null)
+                .collect(Collectors.toMap(
+                        BiathlonResultInputDto::getRegistrationId,
+                        Function.identity(),
+                        (first, second) -> first
+                ));
+
+        for (CompetitionRegistrationEntity registration : registrations) {
+            BiathlonResultInputDto result = resultsByRegistrationId.get(registration.getId());
+            if (result == null) {
+                throw new CompetitionResultException(competitionId, "Every athlete needs a time or DNF before the competition ends.");
+            }
+
+            validateBiathlonResult(competition, result);
+        }
+
+        for (BiathlonResultInputDto result : submittedResults) {
+            CompetitionRegistrationEntity registration = registrationsById.get(result.getRegistrationId());
+            if (registration == null) {
+                throw new CompetitionResultException(competitionId, "This athlete is not registered for this competition.");
+            }
+
+            registration.setDidNotFinish(result.isDidNotFinish());
+            registration.setBiathlonTime(result.isDidNotFinish() ? null : result.getBiathlonTime());
+            registration.setMissedTargets(result.isDidNotFinish() ? null : result.getMissedTargets());
+        }
+    }
+
+    private void validateBiathlonResult(CompetitionEntity competition, BiathlonResultInputDto result) {
+        if (result.isDidNotFinish()) {
+            return;
+        }
+
+        if (result.getBiathlonTime() == null) {
+            throw new CompetitionResultException(competition.getId(), "Every athlete needs a time or DNF before the competition ends.");
+        }
+
+        if (result.getBiathlonTime().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CompetitionResultException(competition.getId(), "Biathlon time must be greater than zero.");
+        }
+
+        Integer missedTargets = result.getMissedTargets();
+        if (missedTargets == null) {
+            throw new CompetitionResultException(competition.getId(), "Missed targets are required unless athlete is DNF.");
+        }
+
+        if (missedTargets < 0 || missedTargets > competition.getNumberOfTargets()) {
+            throw new CompetitionResultException(
+                    competition.getId(),
+                    "Missed targets must be between 0 and " + competition.getNumberOfTargets() + "."
+            );
+        }
+    }
+
     private void validateCompetitionCanBeJoined(CompetitionEntity competition) {
         if (competition.getStatus() != CompetitionStatus.STARTING_SOON) {
             throw new CompetitionJoinException("You cannot join a competition after it has started.");
@@ -450,7 +542,10 @@ public class CompetitionServiceImpl implements CompetitionService {
         viewDto.setStartingSoon(competition.getStatus() == CompetitionStatus.STARTING_SOON);
         viewDto.setFirstRun(competition.getStatus() == CompetitionStatus.FIRST_RUN);
         viewDto.setSecondRun(competition.getStatus() == CompetitionStatus.SECOND_RUN);
+        viewDto.setInProgress(competition.getStatus() == CompetitionStatus.IN_PROGRESS);
         viewDto.setEnded(competition.getStatus() == CompetitionStatus.ENDED);
+        viewDto.setSkiSlalom(competition.getType() == CompetitionType.SKI_SLALOM);
+        viewDto.setBiathlon(competition.getType() == CompetitionType.BIATHLON);
 
         return viewDto;
     }
@@ -484,6 +579,8 @@ public class CompetitionServiceImpl implements CompetitionService {
         participantViewDto.setQualifiedForSecondRun(registration.isQualifiedForSecondRun());
         participantViewDto.setSecondRunTime(registration.getSecondRunTime());
         participantViewDto.setSecondRunDidNotFinish(registration.isSecondRunDidNotFinish());
+        participantViewDto.setBiathlonTime(registration.getBiathlonTime());
+        participantViewDto.setMissedTargets(registration.getMissedTargets());
         participantViewDto.setTotalTime(calculateTotalTime(registration));
         participantViewDto.setResultStatus(resolveResultStatus(registration));
 
@@ -502,8 +599,14 @@ public class CompetitionServiceImpl implements CompetitionService {
         }
 
         if (competition.getStatus() == CompetitionStatus.ENDED) {
+            if (competition.getType() == CompetitionType.SKI_SLALOM) {
+                return registrations.stream()
+                        .filter(CompetitionRegistrationEntity::isQualifiedForSecondRun)
+                        .sorted(finalStandingsComparator())
+                        .toList();
+            }
+
             return registrations.stream()
-                    .filter(CompetitionRegistrationEntity::isQualifiedForSecondRun)
                     .sorted(finalStandingsComparator())
                     .toList();
         }
@@ -513,11 +616,23 @@ public class CompetitionServiceImpl implements CompetitionService {
 
     private Comparator<CompetitionRegistrationEntity> finalStandingsComparator() {
         return Comparator
-                .comparing(CompetitionRegistrationEntity::isSecondRunDidNotFinish)
+                .comparing(this::isFinalDnf)
                 .thenComparing(this::calculateTotalTime, Comparator.nullsLast(Comparator.naturalOrder()));
     }
 
+    private boolean isFinalDnf(CompetitionRegistrationEntity registration) {
+        if (registration.getCompetition().getType() == CompetitionType.BIATHLON) {
+            return registration.isDidNotFinish();
+        }
+
+        return registration.isSecondRunDidNotFinish();
+    }
+
     private BigDecimal calculateTotalTime(CompetitionRegistrationEntity registration) {
+        if (registration.getCompetition().getType() == CompetitionType.BIATHLON) {
+            return calculateBiathlonTotalTime(registration);
+        }
+
         if (registration.isDidNotFinish() || registration.isSecondRunDidNotFinish()) {
             return null;
         }
@@ -527,6 +642,25 @@ public class CompetitionServiceImpl implements CompetitionService {
         }
 
         return registration.getFirstRunTime().add(registration.getSecondRunTime());
+    }
+
+    private BigDecimal calculateBiathlonTotalTime(CompetitionRegistrationEntity registration) {
+        if (registration.isDidNotFinish()) {
+            return null;
+        }
+
+        CompetitionEntity competition = registration.getCompetition();
+        if (registration.getBiathlonTime() == null
+                || registration.getMissedTargets() == null
+                || competition.getPenaltySecondsPerMiss() == null) {
+            return null;
+        }
+
+        BigDecimal penaltySeconds = BigDecimal.valueOf(
+                (long) registration.getMissedTargets() * competition.getPenaltySecondsPerMiss()
+        );
+
+        return registration.getBiathlonTime().add(penaltySeconds);
     }
 
     private void assignFinalRanks(List<CompetitionParticipantViewDto> participants) {
@@ -578,6 +712,16 @@ public class CompetitionServiceImpl implements CompetitionService {
     private String resolveResultStatus(CompetitionRegistrationEntity registration) {
         if (registration.isDidNotFinish()) {
             return "DNF";
+        }
+
+        if (registration.getCompetition().getType() == CompetitionType.BIATHLON) {
+            if (registration.getCompetition().getStatus() == CompetitionStatus.ENDED) {
+                return "Finished";
+            }
+
+            if (registration.getCompetition().getStatus() == CompetitionStatus.IN_PROGRESS) {
+                return "Pending";
+            }
         }
 
         if (registration.getCompetition().getStatus() == CompetitionStatus.ENDED) {

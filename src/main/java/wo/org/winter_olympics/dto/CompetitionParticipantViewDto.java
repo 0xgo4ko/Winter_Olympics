@@ -17,6 +17,8 @@ public class CompetitionParticipantViewDto {
     private boolean qualifiedForSecondRun;
     private BigDecimal secondRunTime;
     private boolean secondRunDidNotFinish;
+    private BigDecimal biathlonTime;
+    private Integer missedTargets;
     private BigDecimal totalTime;
     private Integer rank;
     private String medal;
@@ -108,6 +110,22 @@ public class CompetitionParticipantViewDto {
 
     public void setSecondRunDidNotFinish(boolean secondRunDidNotFinish) {
         this.secondRunDidNotFinish = secondRunDidNotFinish;
+    }
+
+    public BigDecimal getBiathlonTime() {
+        return biathlonTime;
+    }
+
+    public void setBiathlonTime(BigDecimal biathlonTime) {
+        this.biathlonTime = biathlonTime;
+    }
+
+    public Integer getMissedTargets() {
+        return missedTargets;
+    }
+
+    public void setMissedTargets(Integer missedTargets) {
+        this.missedTargets = missedTargets;
     }
 
     public BigDecimal getTotalTime() {

@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import wo.org.winter_olympics.core.service.CompetitionService;
 import wo.org.winter_olympics.data.entity.enums.CompetitionType;
 import wo.org.winter_olympics.data.entity.enums.Gender;
+import wo.org.winter_olympics.dto.BiathlonResultsFormDto;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.FirstRunResultsFormDto;
 import wo.org.winter_olympics.dto.SecondRunResultsFormDto;
@@ -114,7 +115,7 @@ public class AdminCompetitionController {
     public String startSecondRun(
             @PathVariable Long id,
             @ModelAttribute("firstRunResultsForm") FirstRunResultsFormDto firstRunResultsForm,
-        RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes
     ) {
         try {
             competitionService.startSecondRun(id, firstRunResultsForm.getResults());
@@ -133,13 +134,32 @@ public class AdminCompetitionController {
     public String endCompetition(
             @PathVariable Long id,
             @ModelAttribute("secondRunResultsForm") SecondRunResultsFormDto secondRunResultsForm,
-        RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes
     ) {
         try {
             competitionService.endCompetition(id, secondRunResultsForm.getResults());
         } catch (CompetitionResultException exception) {
             redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
             redirectAttributes.addFlashAttribute("secondRunResultsForm", secondRunResultsForm);
+            return "redirect:/competitions/" + id;
+        }
+
+        redirectAttributes.addFlashAttribute("competitionNotice", "Competition ended successfully.");
+
+        return "redirect:/competitions/" + id;
+    }
+
+    @PostMapping("/admin/competitions/{id}/biathlon/end")
+    public String endBiathlonCompetition(
+            @PathVariable Long id,
+            @ModelAttribute("biathlonResultsForm") BiathlonResultsFormDto biathlonResultsForm,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            competitionService.endBiathlonCompetition(id, biathlonResultsForm.getResults());
+        } catch (CompetitionResultException exception) {
+            redirectAttributes.addFlashAttribute("competitionNotice", exception.getMessage());
+            redirectAttributes.addFlashAttribute("biathlonResultsForm", biathlonResultsForm);
             return "redirect:/competitions/" + id;
         }
 

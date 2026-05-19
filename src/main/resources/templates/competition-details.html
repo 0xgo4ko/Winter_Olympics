@@ -39,6 +39,10 @@
                         class="button button--success"
                         type="submit"
                         form="second-run-results-form">End Competition</button>
+                <button th:if="${competition.biathlon && competition.inProgress}"
+                        class="button button--success"
+                        type="submit"
+                        form="biathlon-results-form">End Competition</button>
                 <a class="button button--secondary-dark" th:href="@{/admin/competitions}">Admin Panel</a>
             </div>
         </div>
@@ -90,19 +94,29 @@
             <p sec:authorize="hasRole('ADMIN')" th:if="${competition.secondRun}">
                 Enter second-run times in seconds or mark qualified athletes as DNF before ending the competition.
             </p>
+            <p sec:authorize="hasRole('ADMIN')" th:if="${competition.biathlon && competition.inProgress}">
+                Enter times in seconds, missed targets, or mark athletes as DNF before ending the competition.
+            </p>
         </div>
 
         <form id="first-run-results-form"
-              th:if="${competition.firstRun}"
+              th:if="${competition.skiSlalom && competition.firstRun}"
               class="results-form"
               th:action="@{/admin/competitions/{id}/second-run/start(id=${competition.id})}"
               method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         </form>
         <form id="second-run-results-form"
-              th:if="${competition.secondRun}"
+              th:if="${competition.skiSlalom && competition.secondRun}"
               class="results-form"
               th:action="@{/admin/competitions/{id}/end(id=${competition.id})}"
+              method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        </form>
+        <form id="biathlon-results-form"
+              th:if="${competition.biathlon && competition.inProgress}"
+              class="results-form"
+              th:action="@{/admin/competitions/{id}/biathlon/end(id=${competition.id})}"
               method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         </form>
@@ -115,15 +129,17 @@
                     <th>Name</th>
                     <th>Country</th>
                     <th>Gender</th>
-                    <th th:if="${!competition.startingSoon}">First Run (s)</th>
-                    <th th:if="${competition.secondRun || competition.ended}">Second Run (s)</th>
+                    <th th:if="${competition.skiSlalom && !competition.startingSoon}">First Run (s)</th>
+                    <th th:if="${competition.skiSlalom && (competition.secondRun || competition.ended)}">Second Run (s)</th>
+                    <th th:if="${competition.biathlon && (competition.inProgress || competition.ended)}">Time (s)</th>
+                    <th th:if="${competition.biathlon && (competition.inProgress || competition.ended)}">Missed Tgs</th>
                     <th th:if="${competition.ended}">Total (s)</th>
                     <th>Result</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(participants)}">
-                    <td th:colspan="${competition.ended ? 8 : (competition.secondRun ? 7 : (competition.startingSoon ? 5 : 6))}">
+                    <td th:colspan="${competition.ended ? 8 : (competition.secondRun || (competition.biathlon && competition.inProgress) ? 7 : (competition.startingSoon ? 5 : 6))}">
                         No athletes have joined this competition yet.
                     </td>
                 </tr>
@@ -133,8 +149,8 @@
                     <td th:text="${participant.fullName}">Ivan Petrov</td>
                     <td th:text="${participant.country}">Bulgaria</td>
                     <td th:text="${participant.gender}">MALE</td>
-                    <td th:if="${!competition.startingSoon}">
-                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.firstRun}">
+                    <td th:if="${competition.skiSlalom && !competition.startingSoon}">
+                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.skiSlalom && competition.firstRun}">
                             <div class="result-row-form">
                                 <input type="hidden"
                                        form="first-run-results-form"
@@ -171,8 +187,8 @@
                             <span th:if="${!participant.didNotFinish && participant.firstRunTime == null}">Pending</span>
                         </div>
                     </td>
-                    <td th:if="${competition.secondRun || competition.ended}">
-                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.secondRun}">
+                    <td th:if="${competition.skiSlalom && (competition.secondRun || competition.ended)}">
+                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.skiSlalom && competition.secondRun}">
                             <div class="result-row-form">
                                 <input type="hidden"
                                        form="second-run-results-form"
@@ -207,6 +223,68 @@
                             <span th:if="${!participant.secondRunDidNotFinish && participant.secondRunTime != null}"
                                   th:text="${participant.secondRunTime}">56.918</span>
                             <span th:if="${!participant.secondRunDidNotFinish && participant.secondRunTime == null}">Pending</span>
+                        </div>
+                    </td>
+                    <td th:if="${competition.biathlon && (competition.inProgress || competition.ended)}">
+                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.inProgress}">
+                            <div class="result-row-form">
+                                <input type="hidden"
+                                       form="biathlon-results-form"
+                                       th:name="|results[${participantStat.index}].registrationId|"
+                                       th:value="${participant.registrationId}">
+                                <input class="table-input"
+                                       form="biathlon-results-form"
+                                       th:name="|results[${participantStat.index}].biathlonTime|"
+                                       type="number"
+                                       min="0.001"
+                                       step="0.001"
+                                       placeholder="seconds"
+                                       th:value="${biathlonResultsForm.results[participantStat.index].biathlonTime}">
+                                <label class="table-checkbox">
+                                    <input type="checkbox"
+                                           form="biathlon-results-form"
+                                           th:name="|results[${participantStat.index}].didNotFinish|"
+                                           value="true"
+                                           th:checked="${biathlonResultsForm.results[participantStat.index].didNotFinish}">
+                                    DNF
+                                </label>
+                            </div>
+                        </div>
+                        <div class="result-value" sec:authorize="!hasRole('ADMIN')" th:if="${competition.inProgress}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.biathlonTime != null}"
+                                  th:text="${participant.biathlonTime}">120.000</span>
+                            <span th:if="${!participant.didNotFinish && participant.biathlonTime == null}">Pending</span>
+                        </div>
+                        <div class="result-value" th:if="${competition.ended}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.biathlonTime != null}"
+                                  th:text="${participant.biathlonTime}">120.000</span>
+                            <span th:if="${!participant.didNotFinish && participant.biathlonTime == null}">Pending</span>
+                        </div>
+                    </td>
+                    <td th:if="${competition.biathlon && (competition.inProgress || competition.ended)}">
+                        <div sec:authorize="hasRole('ADMIN')" th:if="${competition.inProgress}">
+                            <input class="table-input table-input--small"
+                                   form="biathlon-results-form"
+                                   th:name="|results[${participantStat.index}].missedTargets|"
+                                   type="number"
+                                   min="0"
+                                   th:max="${competition.numberOfTargets}"
+                                   placeholder="0"
+                                   th:value="${biathlonResultsForm.results[participantStat.index].missedTargets}">
+                        </div>
+                        <div class="result-value" sec:authorize="!hasRole('ADMIN')" th:if="${competition.inProgress}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.missedTargets != null}"
+                                  th:text="${participant.missedTargets}">1</span>
+                            <span th:if="${!participant.didNotFinish && participant.missedTargets == null}">Pending</span>
+                        </div>
+                        <div class="result-value" th:if="${competition.ended}">
+                            <span th:if="${participant.didNotFinish}">DNF</span>
+                            <span th:if="${!participant.didNotFinish && participant.missedTargets != null}"
+                                  th:text="${participant.missedTargets}">1</span>
+                            <span th:if="${!participant.didNotFinish && participant.missedTargets == null}">Pending</span>
                         </div>
                     </td>
                     <td th:if="${competition.ended}">
