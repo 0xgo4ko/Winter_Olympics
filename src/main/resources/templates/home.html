@@ -63,8 +63,12 @@
             <a class="overview-card__link" th:href="@{/competitions}">View competitions</a>
         </article>
         <article class="overview-card">
-            <h2>Results</h2>
-            <p>Track event standings, medals, and final rankings as the project grows.</p>
+            <div class="overview-card__header">
+                <h2>Results</h2>
+                <span class="label label--public">Public</span>
+            </div>
+            <p>Check out ended competitions general results.</p>
+            <a class="overview-card__link" th:href="@{/results}">View results</a>
         </article>
     </section>
 </main>

@@ -15,6 +15,7 @@ import wo.org.winter_olympics.dto.BiathlonResultInputDto;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
+import wo.org.winter_olympics.dto.CountryMedalCountDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
 import wo.org.winter_olympics.dto.SecondRunResultInputDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
@@ -330,6 +331,32 @@ public class CompetitionServiceImpl implements CompetitionService {
         competitionRepository.save(competition);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CountryMedalCountDto> getCountryMedalCounts() {
+        List<CompetitionRegistrationEntity> endedRegistrations =
+                competitionRegistrationRepository.findAllByCompetitionStatus(CompetitionStatus.ENDED);
+
+        Map<String, CountryMedalCountDto> countriesByName = new java.util.HashMap<>();
+
+        endedRegistrations.forEach(registration -> countriesByName
+                .computeIfAbsent(registration.getUser().getCountry(), CountryMedalCountDto::new)
+                .incrementContestantsCount());
+
+        endedRegistrations.stream()
+                .collect(Collectors.groupingBy(registration -> registration.getCompetition().getId()))
+                .values()
+                .forEach(registrations -> awardMedalsForCompetition(registrations, countriesByName));
+
+        return countriesByName.values()
+                .stream()
+                .sorted(Comparator
+                        .comparing(CountryMedalCountDto::getMedalsCount).reversed()
+                        .thenComparing(Comparator.comparingInt(CountryMedalCountDto::getContestantsCount).reversed())
+                        .thenComparing(CountryMedalCountDto::getCountry))
+                .toList();
+    }
+
     private AppUserEntity getUser(String username) {
         return appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -524,6 +551,22 @@ public class CompetitionServiceImpl implements CompetitionService {
         if (competition.getRegistrationDeadline().isBefore(LocalDate.now())) {
             throw new CompetitionJoinException("Registration for this competition is closed.");
         }
+    }
+
+    private void awardMedalsForCompetition(
+            List<CompetitionRegistrationEntity> registrations,
+            Map<String, CountryMedalCountDto> countriesByName
+    ) {
+        CompetitionEntity competition = registrations.getFirst().getCompetition();
+        List<CompetitionRegistrationEntity> medalCandidates = filterAndSortRegistrations(competition, registrations)
+                .stream()
+                .filter(registration -> calculateTotalTime(registration) != null)
+                .limit(3)
+                .toList();
+
+        medalCandidates.forEach(registration -> countriesByName
+                .computeIfAbsent(registration.getUser().getCountry(), CountryMedalCountDto::new)
+                .incrementMedalsCount());
     }
 
     private CompetitionViewDto mapToViewDto(CompetitionEntity competition) {

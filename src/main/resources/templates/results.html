@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results | Winter Olympics</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="auth-shell auth-shell--top">
+    <section class="auth-panel auth-panel--table">
+        <a class="auth-panel__back" th:href="@{/}">Winter Olympics</a>
+        <div class="page-header">
+            <div>
+                <h1>Results</h1>
+                <p>Public results and rankings from ended competitions.</p>
+            </div>
+            <a class="button button--success" th:href="@{/results(query='country-medals')}">Country Medals</a>
+        </div>
+
+        <div class="table-wrap" th:if="${showCountryMedals}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Country</th>
+                    <th>Contestants</th>
+                    <th>Medals</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(countryMedals)}">
+                    <td colspan="3">No ended competitions yet.</td>
+                </tr>
+                <tr th:each="countryResult : ${countryMedals}">
+                    <td th:text="${countryResult.country}">Bulgaria</td>
+                    <td th:text="${countryResult.contestantsCount}">4</td>
+                    <td th:text="${countryResult.medalsCount}">2</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="auth-panel__footer" th:if="${!showCountryMedals}">
+            Select a result query to view public standings.
+        </p>
+    </section>
+</main>
+</body>
+</html>

@@ -3,6 +3,7 @@ package wo.org.winter_olympics.core.service;
 import wo.org.winter_olympics.dto.CompetitionCreateDto;
 import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
+import wo.org.winter_olympics.dto.CountryMedalCountDto;
 import wo.org.winter_olympics.dto.BiathlonResultInputDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
 import wo.org.winter_olympics.dto.SecondRunResultInputDto;
@@ -39,4 +40,6 @@ public interface CompetitionService {
     void endCompetition(Long competitionId, List<SecondRunResultInputDto> secondRunResults);
 
     void endBiathlonCompetition(Long competitionId, List<BiathlonResultInputDto> biathlonResults);
+
+    List<CountryMedalCountDto> getCountryMedalCounts();
 }

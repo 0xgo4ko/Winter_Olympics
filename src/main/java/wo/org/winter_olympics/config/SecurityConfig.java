@@ -18,7 +18,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/home", "/css/**", "/images/**", "/js/**").permitAll()
                         .requestMatchers("/login", "/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/competitions/*/join", "/competitions/*/leave").hasRole("ATHLETE")
-                        .requestMatchers("/competitions/**", "/rankings/**", "/medals/**").permitAll()
+                        .requestMatchers("/competitions/**", "/results/**", "/rankings/**", "/medals/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/athlete/**").hasRole("ATHLETE")
                         .anyRequest().authenticated()
