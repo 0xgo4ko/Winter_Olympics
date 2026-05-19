@@ -15,7 +15,11 @@
                 <h1>Results</h1>
                 <p>Public results and rankings from ended competitions.</p>
             </div>
-            <a class="button button--success" th:href="@{/results(query='country-medals')}">Country Medals</a>
+            <div class="page-header__actions">
+                <a class="button button--success" th:href="@{/results(query='country-medals')}">Country Medals</a>
+                <a class="button button--secondary-dark" th:href="@{/results(query='average-age')}">Average Age</a>
+                <a class="button button--secondary-dark" th:href="@{/results(query='medalist-ages')}">Medalist Ages</a>
+            </div>
         </div>
 
         <div class="table-wrap" th:if="${showCountryMedals}">
@@ -40,7 +44,53 @@
             </table>
         </div>
 
-        <p class="auth-panel__footer" th:if="${!showCountryMedals}">
+        <div class="table-wrap" th:if="${showAverageAge}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Participants</th>
+                    <th>Average Age</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${participantAgeStats.participantsCount == 0}">
+                    <td colspan="2">No ended competitions yet.</td>
+                </tr>
+                <tr th:if="${participantAgeStats.participantsCount > 0}">
+                    <td th:text="${participantAgeStats.participantsCount}">10</td>
+                    <td th:text="${participantAgeStats.averageAge}">24.5</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-wrap" th:if="${showMedalistAges}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Query</th>
+                    <th>Athlete</th>
+                    <th>Country</th>
+                    <th>Competition</th>
+                    <th>Age</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(medalistAges)}">
+                    <td colspan="5">No medalists from ended competitions yet.</td>
+                </tr>
+                <tr th:each="medalistAge : ${medalistAges}">
+                    <td th:text="${medalistAge.label}">Youngest</td>
+                    <td th:text="${medalistAge.fullName}">Ivan Petrov</td>
+                    <td th:text="${medalistAge.country}">Bulgaria</td>
+                    <td th:text="${medalistAge.competitionName}">Men Ski Slalom</td>
+                    <td th:text="${medalistAge.age}">24</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="auth-panel__footer" th:if="${!showCountryMedals && !showAverageAge && !showMedalistAges}">
             Select a result query to view public standings.
         </p>
     </section>

@@ -21,10 +21,20 @@ public class ResultsController {
             Model model
     ) {
         boolean showCountryMedals = "country-medals".equals(query);
+        boolean showAverageAge = "average-age".equals(query);
+        boolean showMedalistAges = "medalist-ages".equals(query);
 
         model.addAttribute("showCountryMedals", showCountryMedals);
+        model.addAttribute("showAverageAge", showAverageAge);
+        model.addAttribute("showMedalistAges", showMedalistAges);
         if (showCountryMedals) {
             model.addAttribute("countryMedals", competitionService.getCountryMedalCounts());
+        }
+        if (showAverageAge) {
+            model.addAttribute("participantAgeStats", competitionService.getParticipantAgeStats());
+        }
+        if (showMedalistAges) {
+            model.addAttribute("medalistAges", competitionService.getYoungestAndOldestMedalists());
         }
 
         return "results";

@@ -17,6 +17,8 @@ import wo.org.winter_olympics.dto.CompetitionParticipantViewDto;
 import wo.org.winter_olympics.dto.CompetitionViewDto;
 import wo.org.winter_olympics.dto.CountryMedalCountDto;
 import wo.org.winter_olympics.dto.FirstRunResultInputDto;
+import wo.org.winter_olympics.dto.MedalistAgeDto;
+import wo.org.winter_olympics.dto.ParticipantAgeStatsDto;
 import wo.org.winter_olympics.dto.SecondRunResultInputDto;
 import wo.org.winter_olympics.exception.CompetitionJoinException;
 import wo.org.winter_olympics.exception.CompetitionNameAlreadyExistsException;
@@ -26,7 +28,9 @@ import wo.org.winter_olympics.exception.CompetitionStartException;
 import wo.org.winter_olympics.exception.UserNotFoundException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -357,6 +361,63 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ParticipantAgeStatsDto getParticipantAgeStats() {
+        List<Integer> participantAges = competitionRegistrationRepository
+                .findAllByCompetitionStatus(CompetitionStatus.ENDED)
+                .stream()
+                .filter(registration -> registration.getUser().getDateOfBirth() != null)
+                .map(registration -> calculateAge(registration.getUser().getDateOfBirth()))
+                .toList();
+
+        if (participantAges.isEmpty()) {
+            return new ParticipantAgeStatsDto(0, BigDecimal.ZERO);
+        }
+
+        int ageSum = participantAges.stream()
+                .mapToInt(Integer::intValue)
+                .sum();
+        BigDecimal averageAge = BigDecimal.valueOf(ageSum)
+                .divide(BigDecimal.valueOf(participantAges.size()), 1, RoundingMode.HALF_UP);
+
+        return new ParticipantAgeStatsDto(participantAges.size(), averageAge);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MedalistAgeDto> getYoungestAndOldestMedalists() {
+        List<CompetitionRegistrationEntity> medalists = competitionRegistrationRepository
+                .findAllByCompetitionStatus(CompetitionStatus.ENDED)
+                .stream()
+                .collect(Collectors.groupingBy(registration -> registration.getCompetition().getId()))
+                .values()
+                .stream()
+                .flatMap(registrations -> getMedalistsForCompetition(registrations).stream())
+                .filter(registration -> registration.getUser().getDateOfBirth() != null)
+                .toList();
+
+        if (medalists.isEmpty()) {
+            return List.of();
+        }
+
+        CompetitionRegistrationEntity youngest = medalists.stream()
+                .max(Comparator.comparing(registration -> registration.getUser().getDateOfBirth()))
+                .orElseThrow();
+        CompetitionRegistrationEntity oldest = medalists.stream()
+                .min(Comparator.comparing(registration -> registration.getUser().getDateOfBirth()))
+                .orElseThrow();
+
+        if (youngest.getId().equals(oldest.getId())) {
+            return List.of(mapToMedalistAgeDto("Youngest and oldest", youngest));
+        }
+
+        return List.of(
+                mapToMedalistAgeDto("Youngest", youngest),
+                mapToMedalistAgeDto("Oldest", oldest)
+        );
+    }
+
     private AppUserEntity getUser(String username) {
         return appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -557,16 +618,39 @@ public class CompetitionServiceImpl implements CompetitionService {
             List<CompetitionRegistrationEntity> registrations,
             Map<String, CountryMedalCountDto> countriesByName
     ) {
-        CompetitionEntity competition = registrations.getFirst().getCompetition();
-        List<CompetitionRegistrationEntity> medalCandidates = filterAndSortRegistrations(competition, registrations)
-                .stream()
-                .filter(registration -> calculateTotalTime(registration) != null)
-                .limit(3)
-                .toList();
+        List<CompetitionRegistrationEntity> medalCandidates = getMedalistsForCompetition(registrations);
 
         medalCandidates.forEach(registration -> countriesByName
                 .computeIfAbsent(registration.getUser().getCountry(), CountryMedalCountDto::new)
                 .incrementMedalsCount());
+    }
+
+    private List<CompetitionRegistrationEntity> getMedalistsForCompetition(
+            List<CompetitionRegistrationEntity> registrations
+    ) {
+        CompetitionEntity competition = registrations.getFirst().getCompetition();
+
+        return filterAndSortRegistrations(competition, registrations)
+                .stream()
+                .filter(registration -> calculateTotalTime(registration) != null)
+                .limit(3)
+                .toList();
+    }
+
+    private MedalistAgeDto mapToMedalistAgeDto(String label, CompetitionRegistrationEntity registration) {
+        AppUserEntity user = registration.getUser();
+
+        return new MedalistAgeDto(
+                label,
+                user.getFullName(),
+                user.getCountry(),
+                registration.getCompetition().getName(),
+                calculateAge(user.getDateOfBirth())
+        );
+    }
+
+    private int calculateAge(LocalDate dateOfBirth) {
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 
     private CompetitionViewDto mapToViewDto(CompetitionEntity competition) {
